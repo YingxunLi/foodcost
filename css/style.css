@@ -82,3 +82,14 @@ body {
     z-index: 1000;
     white-space: nowrap;
 }
+
+#checkbox-area {
+    /* 主要样式已在js中内联设置，这里可补充一些全局样式 */
+    user-select: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+#checkbox-area label input[type="radio"] {
+    accent-color: #FD96B3;
+    margin-right: 4px;
+}
