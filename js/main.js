@@ -1,6 +1,6 @@
 let stageHeight;
 let stageWidth;
-const margin = { top: 180, right: 80, bottom: 100, left: 80 };
+const margin = { top: 120, right: 80, bottom: 100, left: 80 }; // 顶部加高
 
 const fields = [
   { key: "Cost", label: "Cost" },
@@ -13,6 +13,14 @@ const fields = [
 ];
 let currentField = "Cost";
 
+// 新增：顶部区域的选项
+const topFields = [
+  { key: "Cost", label: "Cost" },
+  { key: "TagGNI", label: "Income" },
+  { key: "Vergleich", label: "Ratio" }
+];
+let currentTopField = "Cost";
+
 init();
 
 function init() {
@@ -20,10 +28,89 @@ function init() {
   stageWidth = renderer.clientWidth;
   stageHeight = renderer.clientHeight;
 
-  // 添加复选框区域
+  // ----------- 新增顶部区域 -----------
+  let topArea = document.createElement("div");
+  topArea.id = "top-area";
+  topArea.style.position = "absolute";
+  topArea.style.left = `${margin.left}px`;
+  topArea.style.top = `30px`;
+  topArea.style.width = `${stageWidth - margin.left - margin.right}px`;
+  topArea.style.height = "60px";
+  topArea.style.display = "flex";
+  topArea.style.justifyContent = "space-between";
+  topArea.style.alignItems = "center";
+  topArea.style.zIndex = "20";
+  topArea.style.pointerEvents = "auto";
+
+  // 标题
+  let title = document.createElement("div");
+  title.textContent = "Healthy Diet Cost";
+  title.style.fontSize = "20px";
+  title.style.fontWeight = "bold";
+  title.style.color = "#6B7C8D";
+  topArea.appendChild(title);
+
+  // 右侧选项
+  let topOptions = document.createElement("div");
+  topOptions.style.display = "flex";
+  topOptions.style.gap = "24px";
+  topFields.forEach(f => {
+    let btn = document.createElement("button");
+    btn.textContent = f.label;
+    btn.style.fontSize = "15px";
+    btn.style.padding = "6px 18px";
+    btn.style.border = "none";
+    btn.style.borderRadius = "18px";
+    btn.style.background = (f.key === currentTopField) ? "#EFC5D8" : "#E1E5E8";
+    btn.style.color = (f.key === currentTopField) ? "#FFFFFF" : "#6B7C8D";
+    btn.style.cursor = "pointer";
+    btn.style.transition = "background 0.2s,color 0.2s";
+    btn.addEventListener("mouseenter", () => {
+      btn.style.background = "#6B7C8D";
+      btn.style.color = "#fff";
+    });
+    btn.addEventListener("mouseleave", () => {
+      btn.style.background = (f.key === currentTopField) ? "#EFC5D8" : "#E1E5E8";
+      btn.style.color = (f.key === currentTopField) ? "#FFFFFF" : "#6B7C8D";
+    });
+    btn.addEventListener("click", () => {
+      const prevField = currentField;
+      currentTopField = f.key;
+      currentField = f.key;
+      // 重新渲染顶部按钮
+      Array.from(topOptions.children).forEach((b, idx) => {
+        b.style.background = (topFields[idx].key === currentTopField) ? "#EFC5D8" : "#E1E5E8";
+        b.style.color = (topFields[idx].key === currentTopField) ? "#FFFFFF" : "#6B7C8D";
+      });
+      // 重新渲染下方bar
+      if (prevField === "Cost" && currentField === "TagGNI") {
+        drawCountryCostChart("costToIncome");
+      } else if (prevField === "Cost" && currentField === "Vergleich") {
+        drawCountryCostChart("costToRatio");
+      } else if (prevField === "TagGNI" && currentField === "Vergleich") {
+        drawCountryCostChart("incomeToRatio");
+      } else if (prevField === "Vergleich" && currentField === "Cost") {
+        drawCountryCostChart("ratioToCost");
+      } else if (prevField === "Vergleich" && currentField === "TagGNI") {
+        drawCountryCostChart("ratioToIncome");
+      } else if (prevField === "TagGNI" && currentField === "Cost") {
+        drawCountryCostChart("incomeToCost");
+      } else {
+        drawCountryCostChart();
+      }
+    });
+    topOptions.appendChild(btn);
+  });
+  topArea.appendChild(topOptions);
+
+  // 先移除旧的top-area
+  let oldTop = document.getElementById("top-area");
+  if (oldTop) oldTop.remove();
+  renderer.parentNode.appendChild(topArea);
+
+  // ----------- bar区域下方的字段选择 -----------
   let checkboxArea = document.createElement("div");
   checkboxArea.id = "checkbox-area";
-  // 计算chartWidth并设置宽度和定位
   const chartWidth = stageWidth - margin.left - margin.right;
   checkboxArea.style.position = "absolute";
   checkboxArea.style.left = `${margin.left}px`;
@@ -35,15 +122,41 @@ function init() {
 
   fields.forEach(f => {
     let label = document.createElement("label");
+    label.classList.add("barfield-label");
     let input = document.createElement("input");
     input.type = "radio";
     input.name = "barfield";
     input.value = f.key;
+    input.classList.add("barfield-input");
     if (f.key === currentField) input.checked = true;
     input.addEventListener("change", (e) => {
       if (e.target.checked) {
+        const prevField = currentField;
         currentField = e.target.value;
-        drawCountryCostChart();
+        // 如果切换到Cost/Income/Ratio，顶部按钮也联动
+        if (["Cost", "TagGNI", "Vergleich"].includes(currentField)) {
+          currentTopField = currentField;
+          // 重新渲染顶部按钮
+          Array.from(topOptions.children).forEach((b, idx) => {
+            b.style.background = (topFields[idx].key === currentTopField) ? "#EFC5D8" : "#E1E5E8";
+            b.style.color = (topFields[idx].key === currentTopField) ? "#FFFFFF" : "#6B7C8D";
+          });
+        }
+        if (prevField === "Cost" && currentField === "TagGNI") {
+          drawCountryCostChart("costToIncome");
+        } else if (prevField === "Cost" && currentField === "Vergleich") {
+          drawCountryCostChart("costToRatio");
+        } else if (prevField === "TagGNI" && currentField === "Vergleich") {
+          drawCountryCostChart("incomeToRatio");
+        } else if (prevField === "Vergleich" && currentField === "Cost") {
+          drawCountryCostChart("ratioToCost");
+        } else if (prevField === "Vergleich" && currentField === "TagGNI") {
+          drawCountryCostChart("ratioToIncome");
+        } else if (prevField === "TagGNI" && currentField === "Cost") {
+          drawCountryCostChart("incomeToCost");
+        } else {
+          drawCountryCostChart();
+        }
       }
     });
     let span = document.createElement("span");
@@ -61,47 +174,385 @@ function init() {
   drawCountryCostChart();
 }
 
-function drawCountryCostChart() { 
+function drawCountryCostChart(transitionMode) { 
   document.querySelector("#renderer").innerHTML = "";
 
-  
+  // 锁定复选框逻辑
+  const isLockMode = (currentField === "TagGNI" || currentField === "Vergleich");
+  document.querySelectorAll('.barfield-label').forEach(label => {
+    const input = label.querySelector('input.barfield-input');
+    const isCost = input.value === "Cost";
+    if (isLockMode) {
+      input.disabled = true;
+      if (isCost) {
+        label.style.color = "#EFC5D8";
+        // 保持选中
+        input.checked = true;
+      } else {
+        label.style.color = "#E1E5E8";
+        input.checked = false;
+      }
+    } else {
+      input.disabled = false;
+      label.style.color = "#333";
+    }
+  });
+
   let tooltip = document.createElement("div");
   tooltip.classList.add("tooltip");
   document.body.appendChild(tooltip);
 
-  const data = jsonData;
-  console.log("insgesamt", data.length, "Länder");
-
+  const data = [...jsonData].sort((a, b) => parseFloat(b.TagGNI) - parseFloat(a.TagGNI));
   const chartWidth = stageWidth - margin.left - margin.right;
   const chartHeight = stageHeight - margin.top - margin.bottom;
-  const gap = 4;
+  const gap = 6;
   const barWidth = (chartWidth - gap * (data.length - 1)) / data.length;
-  // 取当前字段的最大值
-  const maxCost = Math.max(...data.map(d => parseFloat(d[currentField])));
+
+  let maxCost = Math.max(...data.map(d => parseFloat(d["Cost"])));
+  let maxIncome = Math.max(...data.map(d => parseFloat(d["TagGNI"])));
+  let maxVergleich = Math.max(...data.map(d => parseFloat(d["Vergleich"]))); // 新增
 
   const bars = [];
 
+  // cost->income时，cost bar高度过渡
+  if (transitionMode === "costToIncome") {
+    // 先渲染 cost 柱（以 cost 最大值映射）
+    data.forEach((country, i) => {
+      const cost = parseFloat(country["Cost"]);
+      const barHeight = gmynd.map(cost, 0, maxCost, 0, chartHeight);
+      const xPos = margin.left + i * (barWidth + gap);
+      const yPos = margin.top + (chartHeight - barHeight);
+
+      let bar = document.createElement("div");
+      bar.classList.add("bar", "cost");
+      bar.style.width = `${barWidth}px`;
+      bar.style.height = `${barHeight}px`;
+      bar.style.left = `${xPos}px`;
+      bar.style.top = `${yPos}px`;
+      bar.style.position = "absolute";
+      bar.style.transition = "height 0.5s, top 0.5s";
+
+      document.querySelector("#renderer").appendChild(bar);
+      bars.push(bar);
+    });
+
+    // 强制 reflow
+    void document.querySelector("#renderer").offsetHeight;
+
+    // 过渡到 income 映射下的 cost 柱高度
+    data.forEach((country, i) => {
+      const cost = parseFloat(country["Cost"]);
+      const barHeight = gmynd.map(cost, 0, maxIncome, 0, chartHeight);
+      const yPos = margin.top + (chartHeight - barHeight);
+      const bar = bars[i];
+      bar.style.height = `${barHeight}px`;
+      bar.style.top = `${yPos}px`;
+    });
+
+    // 过渡结束后渲染 income+cost 双柱
+    setTimeout(() => {
+      drawCountryCostChart();
+    }, 500);
+
+    return;
+  }
+
+  // cost->ratio时，cost bar高度过渡
+  if (transitionMode === "costToRatio") {
+    // 先渲染 cost 柱（以 cost 最大值映射）
+    data.forEach((country, i) => {
+      const cost = parseFloat(country["Cost"]);
+      const barHeight = gmynd.map(cost, 0, maxCost, 0, chartHeight);
+      const xPos = margin.left + i * (barWidth + gap);
+      const yPos = margin.top + (chartHeight - barHeight);
+
+      let bar = document.createElement("div");
+      bar.classList.add("bar", "cost");
+      bar.style.width = `${barWidth}px`;
+      bar.style.height = `${barHeight}px`;
+      bar.style.left = `${xPos}px`;
+      bar.style.top = `${yPos}px`;
+      bar.style.position = "absolute";
+      bar.style.backgroundColor = "#EFC5D8";
+      bar.style.transition = "height 0.5s, top 0.5s";
+      document.querySelector("#renderer").appendChild(bar);
+      bars.push(bar);
+    });
+
+    // 强制 reflow
+    void document.querySelector("#renderer").offsetHeight;
+
+    // 过渡到 ratio 映射下的 cost 柱高度
+    data.forEach((country, i) => {
+      const vergleich = parseFloat(country["Vergleich"]);
+      const barHeight = gmynd.map(vergleich, 0, maxVergleich, 0, chartHeight);
+      const yPos = margin.top + (chartHeight - barHeight);
+      const bar = bars[i];
+      bar.style.height = `${barHeight}px`;
+      bar.style.top = `${yPos}px`;
+    });
+
+    // 过渡结束后渲染 ratio 柱
+    setTimeout(() => {
+      drawCountryCostChart();
+    }, 500);
+
+    return;
+  }
+
+  // income->ratio时，income bar过渡到ratio灰色100bar，cost bar过渡到ratio粉色bar
+  if (transitionMode === "incomeToRatio") {
+    // 先渲染 income 页面：income bar（灰色）和 cost bar（粉色），高度都以 income 最大值映射
+    data.forEach((country, i) => {
+      const income = parseFloat(country["TagGNI"]);
+      const cost = parseFloat(country["Cost"]);
+      const vergleich = parseFloat(country["Vergleich"]);
+      const barHeightIncome = gmynd.map(income, 0, maxIncome, 0, chartHeight);
+      const barHeightCost = gmynd.map(cost, 0, maxIncome, 0, chartHeight);
+      const xPos = margin.left + i * (barWidth + gap);
+
+      // income bar（灰色，目标是 ratio 的 100% bar）
+      let barBg = document.createElement("div");
+      barBg.classList.add("bar", "ratio-bg");
+      barBg.style.width = `${barWidth}px`;
+      barBg.style.height = `${barHeightIncome}px`;
+      barBg.style.left = `${xPos}px`;
+      barBg.style.top = `${margin.top + (chartHeight - barHeightIncome)}px`;
+      barBg.style.backgroundColor = "#E1E5E8";
+      barBg.style.position = "absolute";
+      barBg.style.transition = "height 0.5s, top 0.5s";
+      document.querySelector("#renderer").appendChild(barBg);
+      bars.push(barBg);
+
+      // cost bar（粉色，目标是 ratio 的 vergleich bar）
+      let pinkBar = document.createElement("div");
+      pinkBar.classList.add("bar", "ratio-fg");
+      pinkBar.style.width = `${barWidth}px`;
+      pinkBar.style.height = `${barHeightCost}px`;
+      pinkBar.style.left = `${xPos}px`;
+      pinkBar.style.top = `${margin.top + (chartHeight - barHeightCost)}px`;
+      pinkBar.style.backgroundColor = "#EFC5D8";
+      pinkBar.style.position = "absolute";
+      pinkBar.style.transition = "height 0.5s, top 0.5s";
+      document.querySelector("#renderer").appendChild(pinkBar);
+      bars.push(pinkBar);
+    });
+
+    // 强制 reflow
+    void document.querySelector("#renderer").offsetHeight;
+
+    // income bar 过渡到 ratio 的 100% bar，cost bar 过渡到 ratio 的 vergleich bar
+    data.forEach((country, i) => {
+      // 灰色底bar
+      const barHeightBg = gmynd.map(100, 0, maxVergleich, 0, chartHeight);
+      const yPosBg = margin.top + (chartHeight - barHeightBg);
+      const barBg = bars[i * 2];
+      barBg.style.height = `${barHeightBg}px`;
+      barBg.style.top = `${yPosBg}px`;
+
+      // 粉色bar
+      const vergleich = parseFloat(country["Vergleich"]);
+      const barHeightPink = gmynd.map(vergleich, 0, maxVergleich, 0, chartHeight);
+      const yPosPink = margin.top + (chartHeight - barHeightPink);
+      const pinkBar = bars[i * 2 + 1];
+      pinkBar.style.height = `${barHeightPink}px`;
+      pinkBar.style.top = `${yPosPink}px`;
+    });
+
+    // 过渡结束后渲染 ratio 页面（含灰底和粉色bar）
+    setTimeout(() => {
+      drawCountryCostChart();
+    }, 500);
+
+    return;
+  }
+
+  // ratio->income时，灰色100bar过渡到income bar，粉色bar过渡到cost bar（以income最大值映射）
+  if (transitionMode === "ratioToIncome") {
+    data.forEach((country, i) => {
+      const vergleich = parseFloat(country["Vergleich"]);
+      const barHeightGray = gmynd.map(100, 0, maxVergleich, 0, chartHeight);
+      const barHeightPink = gmynd.map(vergleich, 0, maxVergleich, 0, chartHeight);
+      const xPos = margin.left + i * (barWidth + gap);
+
+      // 灰色底bar
+      let barBg = document.createElement("div");
+      barBg.classList.add("bar", "ratio-bg");
+      barBg.style.width = `${barWidth}px`;
+      barBg.style.height = `${barHeightGray}px`;
+      barBg.style.left = `${xPos}px`;
+      barBg.style.top = `${margin.top + (chartHeight - barHeightGray)}px`;
+      barBg.style.backgroundColor = "#E1E5E8";
+      barBg.style.position = "absolute";
+      barBg.style.transition = "height 0.5s, top 0.5s";
+      document.querySelector("#renderer").appendChild(barBg);
+      bars.push(barBg);
+
+      // 粉色bar
+      let pinkBar = document.createElement("div");
+      pinkBar.classList.add("bar", "ratio-fg");
+      pinkBar.style.width = `${barWidth}px`;
+      pinkBar.style.height = `${barHeightPink}px`;
+      pinkBar.style.left = `${xPos}px`;
+      pinkBar.style.top = `${margin.top + (chartHeight - barHeightPink)}px`;
+      pinkBar.style.backgroundColor = "#EFC5D8";
+      pinkBar.style.position = "absolute";
+      pinkBar.style.transition = "height 0.5s, top 0.5s";
+      document.querySelector("#renderer").appendChild(pinkBar);
+      bars.push(pinkBar);
+    });
+
+    // 强制 reflow
+    void document.querySelector("#renderer").offsetHeight;
+
+    // 灰色bar过渡到income bar，粉色bar过渡到cost bar（以income最大值映射）
+    data.forEach((country, i) => {
+      const income = parseFloat(country["TagGNI"]);
+      const cost = parseFloat(country["Cost"]);
+      const barHeightIncome = gmynd.map(income, 0, maxIncome, 0, chartHeight);
+      const barHeightCost = gmynd.map(cost, 0, maxIncome, 0, chartHeight);
+      const yPosIncome = margin.top + (chartHeight - barHeightIncome);
+      const yPosCost = margin.top + (chartHeight - barHeightCost);
+      const barBg = bars[i * 2];
+      const pinkBar = bars[i * 2 + 1];
+      barBg.style.height = `${barHeightIncome}px`;
+      barBg.style.top = `${yPosIncome}px`;
+      pinkBar.style.height = `${barHeightCost}px`;
+      pinkBar.style.top = `${yPosCost}px`;
+    });
+
+    setTimeout(() => {
+      drawCountryCostChart();
+    }, 500);
+
+    return;
+  }
+
+  // ...existing code for data.forEach...
   data.forEach((country, i) => {
-    const cost = parseFloat(country[currentField]);
-    const barHeight = gmynd.map(cost, 0, maxCost, 0, chartHeight);
+    const cost = parseFloat(country["Cost"]);
+    const income = parseFloat(country["TagGNI"]);
+    const vergleich = parseFloat(country["Vergleich"]);
+    const fieldValue = parseFloat(country[currentField]);
+    const barHeight = gmynd.map(
+      fieldValue,
+      0,
+      currentField === "TagGNI"
+        ? maxIncome
+        : currentField === "Vergleich"
+          ? maxVergleich
+          : maxCost,
+      0,
+      chartHeight
+    );
     const xPos = margin.left + i * (barWidth + gap);
     const yPos = margin.top + (chartHeight - barHeight);
 
-    if (currentField === "Cost") {
-      // 传统整条bar
+    if (currentField === "TagGNI") {
+      // income柱
+      let barIncome = document.createElement("div");
+      barIncome.classList.add("bar", "income");
+      barIncome.style.width = `${barWidth}px`;
+      barIncome.style.height = `${gmynd.map(income, 0, maxIncome, 0, chartHeight)}px`;
+      barIncome.style.left = `${xPos}px`;
+      barIncome.style.top = `${margin.top + (chartHeight - gmynd.map(income, 0, maxIncome, 0, chartHeight))}px`;
+
+      // cost柱（以 income 最大值映射）
+      let barCost = document.createElement("div");
+      barCost.classList.add("bar", "cost");
+      barCost.style.width = `${barWidth}px`;
+      barCost.style.height = `${gmynd.map(cost, 0, maxIncome, 0, chartHeight)}px`;
+      barCost.style.left = `${xPos}px`;
+      barCost.style.top = `${margin.top + (chartHeight - gmynd.map(cost, 0, maxIncome, 0, chartHeight))}px`;
+
+      barIncome.style.zIndex = "1";
+      barCost.style.zIndex = "2";
+
+      // 交互：income
+      barIncome.addEventListener('mouseenter', () => {
+        tooltip.innerText = `${country["Country Name"]}: Income $${income.toFixed(2)}`;
+        tooltip.style.display = "block";
+        const barRect = barIncome.getBoundingClientRect();
+        tooltip.style.left = `${barRect.right + 10}px`;
+        tooltip.style.top = `${barRect.top}px`;
+        bars.forEach(b => b.classList.remove('active', 'faded'));
+        barIncome.classList.add('active');
+        barIncome.style.backgroundColor = barIncome.dataset.activeColor;
+        barCost.style.backgroundColor = barCost.dataset.baseColor;
+      });
+      barIncome.addEventListener('mousemove', () => {
+        const barRect = barIncome.getBoundingClientRect();
+        tooltip.style.left = `${barRect.right + 10}px`;
+        tooltip.style.top = `${barRect.top}px`;
+      });
+      barIncome.addEventListener('mouseleave', () => {
+        tooltip.style.display = "none";
+        barIncome.classList.remove('active');
+        barIncome.style.backgroundColor = barIncome.dataset.baseColor;
+        barCost.style.backgroundColor = barCost.dataset.baseColor;
+      });
+
+      // 交互：cost
+      barCost.addEventListener('mouseenter', () => {
+        tooltip.innerText = `${country["Country Name"]}: Cost $${cost}`;
+        tooltip.style.display = "block";
+        const barRect = barCost.getBoundingClientRect();
+        tooltip.style.left = `${barRect.right + 10}px`;
+        tooltip.style.top = `${barRect.top}px`;
+        bars.forEach(b => b.classList.remove('active', 'faded'));
+        barCost.classList.add('active');
+        barCost.style.backgroundColor = barCost.dataset.activeColor;
+        barIncome.style.backgroundColor = barIncome.dataset.baseColor;
+      });
+      barCost.addEventListener('mousemove', () => {
+        const barRect = barCost.getBoundingClientRect();
+        tooltip.style.left = `${barRect.right + 10}px`;
+        tooltip.style.top = `${barRect.top}px`;
+      });
+      barCost.addEventListener('mouseleave', () => {
+        tooltip.style.display = "none";
+        barCost.classList.remove('active');
+        barCost.style.backgroundColor = barCost.dataset.baseColor;
+        barIncome.style.backgroundColor = barIncome.dataset.baseColor;
+      });
+
+      document.querySelector("#renderer").appendChild(barIncome);
+      document.querySelector("#renderer").appendChild(barCost);
+      bars.push(barIncome, barCost);
+    } else if (["Cost", "Vergleich"].includes(currentField)) {
+      // Ratio页面：先画灰色底bar（100%），再画粉色bar（实际比例）
+      if (currentField === "Vergleich") {
+        // 灰色底bar（100%）
+        let barBg = document.createElement("div");
+        barBg.classList.add("bar", "ratio-bg");
+        barBg.style.width = `${barWidth}px`;
+        barBg.style.height = `${gmynd.map(100, 0, maxVergleich, 0, chartHeight)}px`;
+        barBg.style.left = `${xPos}px`;
+        barBg.style.top = `${margin.top + (chartHeight - gmynd.map(100, 0, maxVergleich, 0, chartHeight))}px`;
+        barBg.style.backgroundColor = "#E1E5E8";
+        barBg.style.position = "absolute";
+        document.querySelector("#renderer").appendChild(barBg);
+      }
+
+      // 粉色bar
       let bar = document.createElement("div");
       bar.classList.add("bar");
       bar.style.width = `${barWidth}px`;
       bar.style.height = `${barHeight}px`;
       bar.style.left = `${xPos}px`;
       bar.style.top = `${yPos}px`;
+      // 颜色统一为粉色
       bar.style.backgroundColor = "#EFC5D8";
       bar.dataset.baseColor = "#EFC5D8";
       bar.dataset.activeColor = "#FD96B3";
       bar.dataset.fadedColor = "#EFC5D8";
+      bar.style.position = "absolute";
 
       bar.addEventListener('mouseenter', () => {
-        tooltip.innerText = `${country["Country Name"]}: $${cost}`;
+        let val = fieldValue;
+        if (currentField === "Cost") val = `$${fieldValue}`;
+        if (currentField === "Vergleich") val = `${fieldValue.toFixed(1)}%`;
+        tooltip.innerText = `${country["Country Name"]}: ${val}`;
         tooltip.style.display = "block";
         const barRect = bar.getBoundingClientRect();
         tooltip.style.left = `${barRect.right + 10}px`;
@@ -130,7 +581,7 @@ function drawCountryCostChart() {
       document.querySelector("#renderer").appendChild(bar);
       bars.push(bar);
     } else {
-      // 方块阵列bar
+      // 其余字段用原有方块阵列
       let barDot = document.createElement("div");
       barDot.classList.add("bar-dot");
       barDot.style.width = `${barWidth}px`;
@@ -139,13 +590,11 @@ function drawCountryCostChart() {
       barDot.style.top = `${margin.top}px`;
       barDot.style.position = "absolute";
 
-      // 计算小方块数量和gap
       const squareSize = Math.max(8, Math.floor(barWidth * 0.8));
       const gapSize = 3;
       const maxSquares = Math.floor(chartHeight / (squareSize + gapSize));
       const numSquares = Math.max(1, Math.round(barHeight / chartHeight * maxSquares));
 
-      // 记录所有小方块用于事件处理
       const squares = [];
       for (let j = 0; j < numSquares; j++) {
         let sq = document.createElement("div");
@@ -155,7 +604,6 @@ function drawCountryCostChart() {
         barDot.appendChild(sq);
       }
 
-      // 事件代理到每个小方块
       squares.forEach(sq => {
         sq.addEventListener('mouseenter', () => {
           tooltip.innerText = `${country["Country Name"]}: ${cost}`;
@@ -166,7 +614,6 @@ function drawCountryCostChart() {
 
           bars.forEach(b => {
             if (b !== barDot) {
-              // 其他barDot下所有小方块都faded
               Array.from(b.children).forEach(child => {
                 child.classList.remove('active');
                 child.classList.add('faded');

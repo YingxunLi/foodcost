@@ -54,12 +54,30 @@ body {
 .bar {
     position: absolute;
     transition: height 0.3s ease, background-color 0.3s ease;
-    background-color: #EFC5D8;
-    opacity: 1;
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
+    opacity: 1;
+    /* 默认颜色可设置为 cost 柱的颜色 */
+    background-color: #EFC5D8;
+    z-index: 1;
 }
-
+.bar.income {
+    background-color: #E1E5E8;
+    opacity: 0.7;
+    z-index: 1;
+}
+.bar.cost {
+    background-color: #EFC5D8;
+    opacity: 1;
+    z-index: 2;
+}
+.bar.active {
+    /* 可根据类型再细分 */
+    background-color: #FD96B3 !important;
+}
+.bar.income.active {
+    background-color: #6B7C8D !important;
+}
 .bar.faded {
     opacity: 0.5;
 }
