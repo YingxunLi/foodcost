@@ -60,6 +60,10 @@ body {
     border-top-right-radius: 8px;
 }
 
+.bar.faded {
+    opacity: 0.5;
+}
+
 /* 新增：用于 cost 以外的 bar，竖直方向均匀阵列的小方块 */
 .bar-dot {
     position: absolute;
@@ -70,6 +74,10 @@ body {
     width: 100%;
     height: 100%;
     pointer-events: none; /* 容器本身不响应事件，事件交给子元素 */
+}
+
+.bar-dot.faded {
+    opacity: 0.5;
 }
 
 .bar-dot-square {
