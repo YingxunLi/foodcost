@@ -113,26 +113,46 @@ body {
 
 #checkbox-area {
     user-select: none;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
     display: flex;
     flex-direction: row;
     margin: 12px 0 0 0;
     align-items: center;
-    background: rgba(255,255,255,0.9);
     padding: 8px 0;
     border-radius: 8px;
     justify-content: space-between;
 }
 
 #checkbox-area label {
-    display: flex;
-    align-items: center;
+    position: relative;
     cursor: pointer;
     font-size: 15px;
     color: #333;
+    padding-left: 0;
 }
 
 #checkbox-area label input[type="radio"] {
-    accent-color: #FD96B3;
-    margin-right: 4px;
+    display: none;
+}
+
+#checkbox-area label span {
+    position: relative;
+    padding-left: 26px;
+}
+
+#checkbox-area label span::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #E1E5E8;
+    transition: background 0.2s;
+}
+
+/* 关键：选中时变色 */
+#checkbox-area label input[type="radio"]:checked + span::before {
+    background: #EFC5D8;
 }

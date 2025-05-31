@@ -35,11 +35,6 @@ function init() {
 
   fields.forEach(f => {
     let label = document.createElement("label");
-    label.style.display = "flex";
-    label.style.alignItems = "center";
-    label.style.cursor = "pointer";
-    label.style.fontSize = "15px";
-    label.style.color = "#333";
     let input = document.createElement("input");
     input.type = "radio";
     input.name = "barfield";
@@ -51,8 +46,10 @@ function init() {
         drawCountryCostChart();
       }
     });
+    let span = document.createElement("span");
+    span.textContent = " " + f.label;
     label.appendChild(input);
-    label.appendChild(document.createTextNode(" " + f.label));
+    label.appendChild(span);
     checkboxArea.appendChild(label);
   });
 
