@@ -60,14 +60,34 @@ body {
     border-top-right-radius: 8px;
 }
 
-.bar.faded {
-    opacity: 0.5;
+/* 新增：用于 cost 以外的 bar，竖直方向均匀阵列的小方块 */
+.bar-dot {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* 容器本身不响应事件，事件交给子元素 */
 }
 
-.bar.active {
-    background-color: #FD96B3;
-    opacity: 1;
+.bar-dot-square {
+    width: 80%;
+    aspect-ratio: 1/1;
+    margin-bottom: 3px;
+    /* border-radius: 3px; */
+    background-color: #80C9BD;
+    transition: background-color 0.3s;
+    pointer-events: auto; /* 方块可响应事件 */
+}
 
+.bar-dot-square.faded {
+    background-color: rgba(128,201,189,0.5) !important;
+}
+
+.bar-dot-square.active {
+    background-color: #02947B !important;
 }
 
 .tooltip {
@@ -84,9 +104,24 @@ body {
 }
 
 #checkbox-area {
-    /* 主要样式已在js中内联设置，这里可补充一些全局样式 */
     user-select: none;
     box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    display: flex;
+    flex-direction: row;
+    margin: 12px 0 0 0;
+    align-items: center;
+    background: rgba(255,255,255,0.9);
+    padding: 8px 0;
+    border-radius: 8px;
+    justify-content: space-between;
+}
+
+#checkbox-area label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 15px;
+    color: #333;
 }
 
 #checkbox-area label input[type="radio"] {

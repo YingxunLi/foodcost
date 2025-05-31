@@ -23,18 +23,15 @@ function init() {
   // 添加复选框区域
   let checkboxArea = document.createElement("div");
   checkboxArea.id = "checkbox-area";
-  checkboxArea.style.display = "flex";
-  checkboxArea.style.flexDirection = "row";
-  checkboxArea.style.gap = "16px";
-  checkboxArea.style.margin = "12px 0 0 0";
-  checkboxArea.style.alignItems = "center";
+  // 计算chartWidth并设置宽度和定位
+  const chartWidth = stageWidth - margin.left - margin.right;
   checkboxArea.style.position = "absolute";
   checkboxArea.style.left = `${margin.left}px`;
   checkboxArea.style.top = `${stageHeight - margin.bottom + 20}px`;
+  checkboxArea.style.width = `${chartWidth}px`;
   checkboxArea.style.zIndex = "10";
-  checkboxArea.style.background = "rgba(255,255,255,0.9)";
-  checkboxArea.style.padding = "8px 16px";
-  checkboxArea.style.borderRadius = "8px";
+  checkboxArea.style.display = "flex";
+  checkboxArea.style.justifyContent = "space-between";
 
   fields.forEach(f => {
     let label = document.createElement("label");
@@ -92,43 +89,114 @@ function drawCountryCostChart() {
     const xPos = margin.left + i * (barWidth + gap);
     const yPos = margin.top + (chartHeight - barHeight);
 
+    if (currentField === "Cost") {
+      // 传统整条bar
+      let bar = document.createElement("div");
+      bar.classList.add("bar");
+      bar.style.width = `${barWidth}px`;
+      bar.style.height = `${barHeight}px`;
+      bar.style.left = `${xPos}px`;
+      bar.style.top = `${yPos}px`;
+      bar.style.backgroundColor = "#EFC5D8";
+      bar.dataset.baseColor = "#EFC5D8";
+      bar.dataset.activeColor = "#FD96B3";
+      bar.dataset.fadedColor = "#EFC5D8";
 
-    let bar = document.createElement("div");
-    bar.classList.add("bar");
-    bar.style.width = `${barWidth}px`;
-    bar.style.height = `${barHeight}px`;
-    bar.style.left = `${xPos}px`;
-    bar.style.top = `${yPos}px`;
-    // bar.style.position = "absolute";
+      bar.addEventListener('mouseenter', () => {
+        tooltip.innerText = `${country["Country Name"]}: $${cost}`;
+        tooltip.style.display = "block";
+        const barRect = bar.getBoundingClientRect();
+        tooltip.style.left = `${barRect.right + 10}px`;
+        tooltip.style.top = `${barRect.top}px`;
 
-    bar.addEventListener('mouseenter', () => {
-      tooltip.innerText = `${country["Country Name"]}: ${currentField === "Cost" ? "$" : ""}${cost}`;
-      tooltip.style.display = "block";
-      const barRect = bar.getBoundingClientRect();
-      tooltip.style.left = `${barRect.right + 10}px`;
-      tooltip.style.top = `${barRect.top}px`;
-
-    
-      bars.forEach(b => {
-        b.classList.remove('active', 'faded');
-        if (b !== bar) {
-          b.classList.add('faded');
-        }
+        bars.forEach(b => {
+          b.classList.remove('active', 'faded');
+          if (b !== bar) b.classList.add('faded');
+        });
+        bar.classList.add('active');
+        bar.style.backgroundColor = bar.dataset.activeColor;
       });
-      bar.classList.add('active');
-    });
-    bar.addEventListener('mousemove', () => {
-      const barRect = bar.getBoundingClientRect();
-      tooltip.style.left = `${barRect.right + 10}px`;
-      tooltip.style.top = `${barRect.top}px`;
-    });
-    bar.addEventListener('mouseleave', () => {
-      tooltip.style.display = "none";
-      bars.forEach(b => b.classList.remove('active', 'faded'));
-    });
+      bar.addEventListener('mousemove', () => {
+        const barRect = bar.getBoundingClientRect();
+        tooltip.style.left = `${barRect.right + 10}px`;
+        tooltip.style.top = `${barRect.top}px`;
+      });
+      bar.addEventListener('mouseleave', () => {
+        tooltip.style.display = "none";
+        bars.forEach(b => {
+          b.classList.remove('active', 'faded');
+          b.style.backgroundColor = b.dataset.baseColor;
+        });
+      });
 
-    document.querySelector("#renderer").appendChild(bar);
-    bars.push(bar);
+      document.querySelector("#renderer").appendChild(bar);
+      bars.push(bar);
+    } else {
+      // 方块阵列bar
+      let barDot = document.createElement("div");
+      barDot.classList.add("bar-dot");
+      barDot.style.width = `${barWidth}px`;
+      barDot.style.height = `${chartHeight}px`;
+      barDot.style.left = `${xPos}px`;
+      barDot.style.top = `${margin.top}px`;
+      barDot.style.position = "absolute";
 
-});
+      // 计算小方块数量和gap
+      const squareSize = Math.max(8, Math.floor(barWidth * 0.8));
+      const gapSize = 3;
+      const maxSquares = Math.floor(chartHeight / (squareSize + gapSize));
+      const numSquares = Math.max(1, Math.round(barHeight / chartHeight * maxSquares));
+
+      // 记录所有小方块用于事件处理
+      const squares = [];
+      for (let j = 0; j < numSquares; j++) {
+        let sq = document.createElement("div");
+        sq.classList.add("bar-dot-square");
+        sq.style.backgroundColor = "#80C9BD";
+        squares.push(sq);
+        barDot.appendChild(sq);
+      }
+
+      // 事件代理到每个小方块
+      squares.forEach(sq => {
+        sq.addEventListener('mouseenter', () => {
+          tooltip.innerText = `${country["Country Name"]}: ${cost}`;
+          tooltip.style.display = "block";
+          const sqRect = sq.getBoundingClientRect();
+          tooltip.style.left = `${sqRect.right + 10}px`;
+          tooltip.style.top = `${sqRect.top}px`;
+
+          bars.forEach(b => {
+            if (b !== barDot) {
+              // 其他barDot下所有小方块都faded
+              Array.from(b.children).forEach(child => {
+                child.classList.remove('active');
+                child.classList.add('faded');
+              });
+            }
+          });
+          squares.forEach(child => {
+            child.classList.remove('faded');
+            child.classList.add('active');
+          });
+        });
+        sq.addEventListener('mousemove', () => {
+          const sqRect = sq.getBoundingClientRect();
+          tooltip.style.left = `${sqRect.right + 10}px`;
+          tooltip.style.top = `${sqRect.top}px`;
+        });
+        sq.addEventListener('mouseleave', () => {
+          tooltip.style.display = "none";
+          bars.forEach(b => {
+            Array.from(b.children).forEach(child => {
+              child.classList.remove('active', 'faded');
+            });
+          });
+        });
+      });
+
+      document.querySelector("#renderer").appendChild(barDot);
+      bars.push(barDot);
+    }
+  });
 }
