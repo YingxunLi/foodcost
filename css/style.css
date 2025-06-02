@@ -171,7 +171,6 @@ body {
     transition: background 0.2s;
 }
 
-/* 关键：选中时变色 */
 #checkbox-area label input[type="radio"]:checked + span::before {
     background: #EFC5D8;
 }

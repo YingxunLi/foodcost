@@ -1,5 +1,8 @@
 let stageHeight;
 let stageWidth;
+
+// let currentPage = "bar"; 
+
 const margin = { top: 120, right: 80, bottom: 100, left: 80 }; // 顶部加高
 
 const fields = [
@@ -43,12 +46,73 @@ function init() {
   topArea.style.pointerEvents = "auto";
 
   // 标题
-  let title = document.createElement("div");
+  let title = document.createElement("button");
   title.textContent = "Healthy Diet Cost";
+
+  title.style.marginLeft = "18px";
+
   title.style.fontSize = "20px";
-  title.style.fontWeight = "bold";
+    
+  title.style.padding = "4px 0px";
+  title.style.border = "none";
+  title.style.background = "#FFFFFF";
   title.style.color = "#6B7C8D";
-  topArea.appendChild(title);
+  title.style.fontWeight = "bold";
+
+  title.style.cursor = "pointer";
+  title.style.transition = "background 0.2s,color 0.2s";
+  title.addEventListener("mouseenter", () => {
+    title.style.color = "#6B7C8D";
+    title.style.fontWeight = "bold";
+  });
+  title.addEventListener("mouseleave", () => {
+    title.style.background = "#FFFFFF";
+    title.style.color = "#E1E5E8";
+  });
+  title.addEventListener("click", () => {
+    drawCountryCostChart();
+    title.style.fontWeight = "bold";
+    title.style.color = "#6B7C8D";
+    affordabilityBtn.style.fontWeight = "normal";
+    affordabilityBtn.style.color = "#E1E5E8";
+  });
+
+  // title.style.display = "flex";
+  // title.style.alignItems = "center";
+
+  // Affordability button
+  let affordabilityBtn = document.createElement("button");
+  affordabilityBtn.textContent = "Affordability";
+  affordabilityBtn.style.marginLeft = "18px";
+  affordabilityBtn.style.fontSize = "20px";
+  affordabilityBtn.style.padding = "4px 16px";
+  affordabilityBtn.style.border = "none";
+  affordabilityBtn.style.background = "#FFFFFF";
+  affordabilityBtn.style.color = "#E1E5E8";
+  affordabilityBtn.style.cursor = "pointer";
+  affordabilityBtn.style.transition = "background 0.2s,color 0.2s";
+  affordabilityBtn.addEventListener("mouseenter", () => {
+    affordabilityBtn.style.color = "#6B7C8D";
+    affordabilityBtn.style.fontWeight = "bold";
+  });
+  affordabilityBtn.addEventListener("mouseleave", () => {
+    affordabilityBtn.style.background = "#FFFFFF";
+    affordabilityBtn.style.color = "#E1E5E8";
+  });
+  affordabilityBtn.addEventListener("click", () => {
+    drawScatterChart();
+    affordabilityBtn.style.fontWeight = "bold";
+    affordabilityBtn.style.color = "#6B7C8D";
+    title.style.color = "#E1E5E8";
+    title.style.fontWeight = "normal";
+  });
+  let leftArea = document.createElement("div");
+  leftArea.style.display = "flex";
+  leftArea.style.alignItems = "center";
+  leftArea.appendChild(title);
+  leftArea.appendChild(affordabilityBtn);
+
+topArea.appendChild(leftArea);
 
   // 右侧选项
   let topOptions = document.createElement("div");
@@ -108,10 +172,19 @@ function init() {
   if (oldTop) oldTop.remove();
   renderer.parentNode.appendChild(topArea);
 
-  // ----------- bar区域下方的字段选择 -----------
+  renderCheckboxArea();
+
+  drawCountryCostChart();
+}
+
+function renderCheckboxArea() {
+  // 先移除旧的区域（如果有）
+  let oldArea = document.getElementById("checkbox-area");
+  if (oldArea) oldArea.remove();
+
+  const chartWidth = stageWidth - margin.left - margin.right;
   let checkboxArea = document.createElement("div");
   checkboxArea.id = "checkbox-area";
-  const chartWidth = stageWidth - margin.left - margin.right;
   checkboxArea.style.position = "absolute";
   checkboxArea.style.left = `${margin.left}px`;
   checkboxArea.style.top = `${stageHeight - margin.bottom + 20}px`;
@@ -137,7 +210,7 @@ function init() {
         if (["Cost", "TagGNI", "Vergleich"].includes(currentField)) {
           currentTopField = currentField;
           // 重新渲染顶部按钮
-          Array.from(topOptions.children).forEach((b, idx) => {
+          Array.from(document.querySelector("#top-area").lastChild.children).forEach((b, idx) => {
             b.style.background = (topFields[idx].key === currentTopField) ? "#EFC5D8" : "#E1E5E8";
             b.style.color = (topFields[idx].key === currentTopField) ? "#FFFFFF" : "#6B7C8D";
           });
@@ -166,16 +239,14 @@ function init() {
     checkboxArea.appendChild(label);
   });
 
-  // 先移除旧的区域（如果有）
-  let oldArea = document.getElementById("checkbox-area");
-  if (oldArea) oldArea.remove();
   renderer.parentNode.appendChild(checkboxArea);
-
-  drawCountryCostChart();
 }
 
 function drawCountryCostChart(transitionMode) { 
   document.querySelector("#renderer").innerHTML = "";
+
+  // 每次渲染条形图时都重新生成底部复选框
+  renderCheckboxArea();
 
   // 锁定复选框逻辑
   const isLockMode = (currentField === "TagGNI" || currentField === "Vergleich");
@@ -643,5 +714,110 @@ function drawCountryCostChart(transitionMode) {
       document.querySelector("#renderer").appendChild(barDot);
       bars.push(barDot);
     }
+  });
+}
+
+// 在文件末尾添加散点图渲染函数
+function drawScatterChart() {
+  document.querySelector("#renderer").innerHTML = "";
+  let oldArea = document.getElementById("checkbox-area");
+  if (oldArea) oldArea.remove();
+  // 画布尺寸
+  const data = [...jsonData];
+  const chartWidth = stageWidth - margin.left - margin.right;
+  const chartHeight = stageHeight - margin.top - margin.bottom;
+
+  // 计算横纵轴范围
+  const minX = Math.min(...data.map(d => parseFloat(d["TagGNI"])));
+  const maxX = Math.max(...data.map(d => parseFloat(d["TagGNI"])));
+  const minY = Math.min(...data.map(d => parseFloat(d["Cost"])));
+  const maxY = Math.max(...data.map(d => parseFloat(d["Cost"])));
+  const minR = Math.min(...data.map(d => parseFloat(d["Vergleich"])));
+  const maxR = Math.max(...data.map(d => parseFloat(d["Vergleich"])));
+
+  // 画坐标轴
+  let axisX = document.createElement("div");
+  axisX.style.position = "absolute";
+  axisX.style.left = `${margin.left}px`;
+  axisX.style.top = `${margin.top + chartHeight}px`;
+  axisX.style.width = `${chartWidth}px`;
+  axisX.style.height = "1px";
+  axisX.style.background = "#bbb";
+  document.querySelector("#renderer").appendChild(axisX);
+
+  let axisY = document.createElement("div");
+  axisY.style.position = "absolute";
+  axisY.style.left = `${margin.left}px`;
+  axisY.style.top = `${margin.top}px`;
+  axisY.style.width = "1px";
+  axisY.style.height = `${chartHeight}px`;
+  axisY.style.background = "#bbb";
+  document.querySelector("#renderer").appendChild(axisY);
+
+  // 横轴标签
+  let xlabel = document.createElement("div");
+  xlabel.textContent = "Income (TagGNI)";
+  xlabel.style.position = "absolute";
+  xlabel.style.left = `${margin.left + chartWidth / 2 - 40}px`;
+  xlabel.style.top = `${margin.top + chartHeight + 30}px`;
+  xlabel.style.color = "#6B7C8D";
+  xlabel.style.fontSize = "14px";
+  document.querySelector("#renderer").appendChild(xlabel);
+
+  // 纵轴标签
+  let ylabel = document.createElement("div");
+  ylabel.textContent = "Cost";
+  ylabel.style.position = "absolute";
+  ylabel.style.left = `${margin.left - 50}px`;
+  ylabel.style.top = `${margin.top + chartHeight / 2 - 30}px`;
+  ylabel.style.transform = "rotate(-90deg)";
+  ylabel.style.transformOrigin = "left top";
+  ylabel.style.color = "#6B7C8D";
+  ylabel.style.fontSize = "14px";
+  document.querySelector("#renderer").appendChild(ylabel);
+
+  // tooltip
+  let tooltip = document.createElement("div");
+  tooltip.classList.add("tooltip");
+  document.body.appendChild(tooltip);
+
+  // 画点
+  data.forEach(d => {
+    const x = gmynd.map(parseFloat(d["TagGNI"]), minX, maxX, 0, chartWidth);
+    const y = gmynd.map(parseFloat(d["Cost"]), minY, maxY, chartHeight, 0);
+    const r = gmynd.map(parseFloat(d["Vergleich"]), minR, maxR, 10, 32);
+
+    let dot = document.createElement("div");
+    dot.style.position = "absolute";
+    dot.style.left = `${margin.left + x - r / 2}px`;
+    dot.style.top = `${margin.top + y - r / 2}px`;
+    dot.style.width = `${r}px`;
+    dot.style.height = `${r}px`;
+    dot.style.borderRadius = "50%";
+    dot.style.background = "#EFC5D8";
+    dot.style.opacity = "0.8";
+    dot.style.boxShadow = "0 2px 8px #eee";
+    dot.style.cursor = "pointer";
+    dot.style.transition = "box-shadow 0.2s, opacity 0.2s";
+
+    dot.addEventListener("mouseenter", () => {
+      dot.style.opacity = "1";
+      dot.style.boxShadow = "0 4px 16px #EFC5D8";
+      tooltip.innerText = `${d["Country Name"]}\nIncome: $${d["TagGNI"]}\nCost: $${d["Cost"]}\nRatio: ${d["Vergleich"]}%`;
+      tooltip.style.display = "block";
+      tooltip.style.left = `${dot.getBoundingClientRect().right + 10}px`;
+      tooltip.style.top = `${dot.getBoundingClientRect().top}px`;
+    });
+    dot.addEventListener("mousemove", () => {
+      tooltip.style.left = `${dot.getBoundingClientRect().right + 10}px`;
+      tooltip.style.top = `${dot.getBoundingClientRect().top}px`;
+    });
+    dot.addEventListener("mouseleave", () => {
+      dot.style.opacity = "0.8";
+      dot.style.boxShadow = "0 2px 8px #eee";
+      tooltip.style.display = "none";
+    });
+
+    document.querySelector("#renderer").appendChild(dot);
   });
 }
