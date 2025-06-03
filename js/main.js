@@ -1,8 +1,5 @@
 let stageHeight;
 let stageWidth;
-
-// let currentPage = "bar"; 
-
 const margin = { top: 120, right: 80, bottom: 100, left: 80 }; // Oberer Rand erhöht
 
 const fields = [
@@ -16,7 +13,6 @@ const fields = [
 ];
 let currentField = "Cost";
 
-// Neu: Optionen im oberen Bereich
 const topFields = [
   { key: "Cost", label: "Cost" },
   { key: "TagGNI", label: "Income" },
@@ -48,71 +44,54 @@ function init() {
   // Titel
   let title = document.createElement("button");
   title.textContent = "Healthy Diet Cost";
+  title.classList.add("top-btn", "main", "active");
 
-  title.style.marginLeft = "18px";
-
-  title.style.fontSize = "20px";
-    
-  title.style.padding = "4px 0px";
-  title.style.border = "none";
-  title.style.background = "#FFFFFF";
-  title.style.color = "#6B7C8D";
-  title.style.fontWeight = "bold";
-
-  title.style.cursor = "pointer";
-  title.style.transition = "background 0.2s,color 0.2s";
   title.addEventListener("mouseenter", () => {
-    title.style.color = "#6B7C8D";
-    title.style.fontWeight = "bold";
+    title.classList.add("active");
+    title.classList.remove("inactive");
   });
   title.addEventListener("mouseleave", () => {
-    title.style.background = "#FFFFFF";
-    title.style.color = "#E1E5E8";
+    if (!title.classList.contains("active")) {
+      title.classList.remove("inactive");
+    }
   });
   title.addEventListener("click", () => {
     drawCountryCostChart();
-    title.style.fontWeight = "bold";
-    title.style.color = "#6B7C8D";
-    affordabilityBtn.style.fontWeight = "normal";
-    affordabilityBtn.style.color = "#E1E5E8";
-  });
-
-  // title.style.display = "flex";
-  // title.style.alignItems = "center";
+    title.classList.add("active");
+    title.classList.remove("inactive");
+    affordabilityBtn.classList.remove("active");
+    affordabilityBtn.classList.add("inactive");
+  }); 
 
   // Affordability-Button
   let affordabilityBtn = document.createElement("button");
   affordabilityBtn.textContent = "Affordability";
-  affordabilityBtn.style.marginLeft = "18px";
-  affordabilityBtn.style.fontSize = "20px";
-  affordabilityBtn.style.padding = "4px 16px";
-  affordabilityBtn.style.border = "none";
-  affordabilityBtn.style.background = "#FFFFFF";
-  affordabilityBtn.style.color = "#E1E5E8";
-  affordabilityBtn.style.cursor = "pointer";
-  affordabilityBtn.style.transition = "background 0.2s,color 0.2s";
+  affordabilityBtn.classList.add("top-btn", "main", "affordability", "inactive");
   affordabilityBtn.addEventListener("mouseenter", () => {
-    affordabilityBtn.style.color = "#6B7C8D";
-    affordabilityBtn.style.fontWeight = "bold";
+    affordabilityBtn.classList.add("active");
+    affordabilityBtn.classList.remove("inactive");
   });
   affordabilityBtn.addEventListener("mouseleave", () => {
-    affordabilityBtn.style.background = "#FFFFFF";
-    affordabilityBtn.style.color = "#E1E5E8";
+    affordabilityBtn.classList.add("inactive");
+    if (!affordabilityBtn.classList.contains("active")) {
+      affordabilityBtn.classList.add("inactive");
+    }
   });
   affordabilityBtn.addEventListener("click", () => {
     barToScatterUltraSmoothTransition();
-    affordabilityBtn.style.fontWeight = "bold";
-    affordabilityBtn.style.color = "#6B7C8D";
-    title.style.color = "#E1E5E8";
-    title.style.fontWeight = "normal";
+    affordabilityBtn.classList.add("active");
+    affordabilityBtn.classList.remove("inactive");
+    title.classList.remove("active");
+    title.classList.add("inactive");
   });
+
   let leftArea = document.createElement("div");
   leftArea.style.display = "flex";
   leftArea.style.alignItems = "center";
   leftArea.appendChild(title);
   leftArea.appendChild(affordabilityBtn);
 
-topArea.appendChild(leftArea);
+  topArea.appendChild(leftArea);
 
   // Rechte Optionen
   let topOptions = document.createElement("div");
@@ -121,30 +100,30 @@ topArea.appendChild(leftArea);
   topFields.forEach(f => {
     let btn = document.createElement("button");
     btn.textContent = f.label;
-    btn.style.fontSize = "15px";
-    btn.style.padding = "6px 18px";
-    btn.style.border = "none";
-    btn.style.borderRadius = "18px";
-    btn.style.background = (f.key === currentTopField) ? "#EFC5D8" : "#E1E5E8";
-    btn.style.color = (f.key === currentTopField) ? "#FFFFFF" : "#6B7C8D";
-    btn.style.cursor = "pointer";
-    btn.style.transition = "background 0.2s,color 0.2s";
+    btn.classList.add("top-btn");
+    if (f.key === currentTopField) {
+      btn.classList.add("active");
+    }
     btn.addEventListener("mouseenter", () => {
-      btn.style.background = "#6B7C8D";
-      btn.style.color = "#fff";
+      btn.classList.add("active");
     });
     btn.addEventListener("mouseleave", () => {
-      btn.style.background = (f.key === currentTopField) ? "#EFC5D8" : "#E1E5E8";
-      btn.style.color = (f.key === currentTopField) ? "#FFFFFF" : "#6B7C8D";
+      if (topFields.find(tf => tf.key === currentTopField).label !== btn.textContent) {
+        btn.classList.remove("active");
+      }
     });
     btn.addEventListener("click", () => {
+      // Vorheriges Feld merken
       const prevField = currentField;
       currentTopField = f.key;
       currentField = f.key;
       // Obere Buttons neu rendern
       Array.from(topOptions.children).forEach((b, idx) => {
-        b.style.background = (topFields[idx].key === currentTopField) ? "#EFC5D8" : "#E1E5E8";
-        b.style.color = (topFields[idx].key === currentTopField) ? "#FFFFFF" : "#6B7C8D";
+        if (topFields[idx].key === currentTopField) {
+          b.classList.add("active");
+        } else {
+          b.classList.remove("active");
+        }
       });
       // Untere Balken neu rendern
       if (prevField === "Cost" && currentField === "TagGNI") {
@@ -204,6 +183,7 @@ function renderCheckboxArea() {
     if (f.key === currentField) input.checked = true;
     input.addEventListener("change", (e) => {
       if (e.target.checked) {
+        // Vorheriges Feld merken
         const prevField = currentField;
         currentField = e.target.value;
         // Wenn zu Cost/Income/Ratio gewechselt wird, obere Buttons synchronisieren
@@ -211,10 +191,11 @@ function renderCheckboxArea() {
           currentTopField = currentField;
           // Obere Buttons neu rendern
           Array.from(document.querySelector("#top-area").lastChild.children).forEach((b, idx) => {
-            b.style.background = (topFields[idx].key === currentTopField) ? "#EFC5D8" : "#E1E5E8";
+            b.style.background = (topFields[idx].key === currentTopField) ? "#FED5E1" : "#E1E5E8";
             b.style.color = (topFields[idx].key === currentTopField) ? "#FFFFFF" : "#6B7C8D";
           });
         }
+        // Übergangslogik für verschiedene Felder
         if (prevField === "Cost" && currentField === "TagGNI") {
           drawCountryCostChart("costToIncome");
         } else if (prevField === "Cost" && currentField === "Vergleich") {
@@ -243,6 +224,9 @@ function renderCheckboxArea() {
 }
 
 function drawCountryCostChart(transitionMode) { 
+  let topOptions = document.querySelector("#top-area > div:last-child");
+  if (topOptions) topOptions.style.display = "flex";
+  
   document.querySelector("#renderer").innerHTML = "";
 
   // Bei jedem Rendern der Balkendiagramme Checkbox-Bereich neu erzeugen
@@ -256,7 +240,7 @@ function drawCountryCostChart(transitionMode) {
     if (isLockMode) {
       input.disabled = true;
       if (isCost) {
-        label.style.color = "#EFC5D8";
+        label.style.color = "#FED5E1";
         // Auswahl beibehalten
         input.checked = true;
       } else {
@@ -287,7 +271,7 @@ function drawCountryCostChart(transitionMode) {
 
   // cost->income时，cost bar高度过渡
   if (transitionMode === "costToIncome") {
-    // 先渲染 cost 柱（以 cost 最大值映射）
+    // Zuerst cost-Balken rendern (mit cost-Maximalwert abbilden)
     data.forEach((country, i) => {
       const cost = parseFloat(country["Cost"]);
       const barHeight = gmynd.map(cost, 0, maxCost, 0, chartHeight);
@@ -307,10 +291,10 @@ function drawCountryCostChart(transitionMode) {
       bars.push(bar);
     });
 
-    // 强制 reflow
+    // Erzwinge Reflow
     void document.querySelector("#renderer").offsetHeight;
 
-    // 过渡到 income 映射下的 cost 柱高度
+    // Übergang zu cost-Balken unter income-Anzeige
     data.forEach((country, i) => {
       const cost = parseFloat(country["Cost"]);
       const barHeight = gmynd.map(cost, 0, maxIncome, 0, chartHeight);
@@ -320,7 +304,7 @@ function drawCountryCostChart(transitionMode) {
       bar.style.top = `${yPos}px`;
     });
 
-    // 过渡结束后渲染 income+cost 双柱
+    // Nach Übergang income+cost Doppelsäulen rendern
     setTimeout(() => {
       drawCountryCostChart();
     }, 500);
@@ -330,7 +314,7 @@ function drawCountryCostChart(transitionMode) {
 
   // cost->ratio时，cost bar高度过渡
   if (transitionMode === "costToRatio") {
-    // 先渲染 cost 柱（以 cost 最大值映射）
+    // Zuerst cost-Balken rendern (mit cost-Maximalwert abbilden)
     data.forEach((country, i) => {
       const cost = parseFloat(country["Cost"]);
       const barHeight = gmynd.map(cost, 0, maxCost, 0, chartHeight);
@@ -344,16 +328,16 @@ function drawCountryCostChart(transitionMode) {
       bar.style.left = `${xPos}px`;
       bar.style.top = `${yPos}px`;
       bar.style.position = "absolute";
-      bar.style.backgroundColor = "#EFC5D8";
       bar.style.transition = "height 0.5s, top 0.5s";
+      // 不再设置 backgroundColor
       document.querySelector("#renderer").appendChild(bar);
       bars.push(bar);
     });
 
-    // 强制 reflow
+    // Erzwinge Reflow
     void document.querySelector("#renderer").offsetHeight;
 
-    // 过渡到 ratio 映射下的 cost 柱高度
+    // Übergang zu ratio-Anzeige
     data.forEach((country, i) => {
       const vergleich = parseFloat(country["Vergleich"]);
       const barHeight = gmynd.map(vergleich, 0, maxVergleich, 0, chartHeight);
@@ -363,7 +347,7 @@ function drawCountryCostChart(transitionMode) {
       bar.style.top = `${yPos}px`;
     });
 
-    // 过渡结束后渲染 ratio 柱
+    // Nach Übergang ratio-Balken rendern
     setTimeout(() => {
       drawCountryCostChart();
     }, 500);
@@ -373,7 +357,7 @@ function drawCountryCostChart(transitionMode) {
 
   // income->ratio时，income bar过渡到ratio灰色100bar，cost bar过渡到ratio粉色bar
   if (transitionMode === "incomeToRatio") {
-    // 先渲染 income 页面：income bar（灰色）和 cost bar（粉色），高度都以 income 最大值映射
+    // Zuerst income-Seite rendern: income-Balken (grau) und cost-Balken (rosa), beide mit income-Maximalwert abbilden
     data.forEach((country, i) => {
       const income = parseFloat(country["TagGNI"]);
       const cost = parseFloat(country["Cost"]);
@@ -389,9 +373,9 @@ function drawCountryCostChart(transitionMode) {
       barBg.style.height = `${barHeightIncome}px`;
       barBg.style.left = `${xPos}px`;
       barBg.style.top = `${margin.top + (chartHeight - barHeightIncome)}px`;
-      barBg.style.backgroundColor = "#E1E5E8";
       barBg.style.position = "absolute";
       barBg.style.transition = "height 0.5s, top 0.5s";
+      // 不再设置 backgroundColor
       document.querySelector("#renderer").appendChild(barBg);
       bars.push(barBg);
 
@@ -402,14 +386,14 @@ function drawCountryCostChart(transitionMode) {
       pinkBar.style.height = `${barHeightCost}px`;
       pinkBar.style.left = `${xPos}px`;
       pinkBar.style.top = `${margin.top + (chartHeight - barHeightCost)}px`;
-      pinkBar.style.backgroundColor = "#EFC5D8";
       pinkBar.style.position = "absolute";
       pinkBar.style.transition = "height 0.5s, top 0.5s";
+      // 不再设置 backgroundColor
       document.querySelector("#renderer").appendChild(pinkBar);
       bars.push(pinkBar);
     });
 
-    // 强制 reflow
+    // Erzwinge Reflow
     void document.querySelector("#renderer").offsetHeight;
 
     // income bar 过渡到 ratio 的 100% bar，cost bar 过渡到 ratio 的 vergleich bar
@@ -430,7 +414,7 @@ function drawCountryCostChart(transitionMode) {
       pinkBar.style.top = `${yPosPink}px`;
     });
 
-    // 过渡结束后渲染 ratio 页面（含灰底和粉色bar）
+    // Nach Übergang ratio-Seite rendern (mit grauem Hintergrund und rosa Balken)
     setTimeout(() => {
       drawCountryCostChart();
     }, 500);
@@ -453,9 +437,9 @@ function drawCountryCostChart(transitionMode) {
       barBg.style.height = `${barHeightGray}px`;
       barBg.style.left = `${xPos}px`;
       barBg.style.top = `${margin.top + (chartHeight - barHeightGray)}px`;
-      barBg.style.backgroundColor = "#E1E5E8";
       barBg.style.position = "absolute";
       barBg.style.transition = "height 0.5s, top 0.5s";
+      // 不再设置 backgroundColor
       document.querySelector("#renderer").appendChild(barBg);
       bars.push(barBg);
 
@@ -466,14 +450,14 @@ function drawCountryCostChart(transitionMode) {
       pinkBar.style.height = `${barHeightPink}px`;
       pinkBar.style.left = `${xPos}px`;
       pinkBar.style.top = `${margin.top + (chartHeight - barHeightPink)}px`;
-      pinkBar.style.backgroundColor = "#EFC5D8";
       pinkBar.style.position = "absolute";
       pinkBar.style.transition = "height 0.5s, top 0.5s";
+      // 不再设置 backgroundColor
       document.querySelector("#renderer").appendChild(pinkBar);
       bars.push(pinkBar);
     });
 
-    // 强制 reflow
+    // Erzwinge Reflow
     void document.querySelector("#renderer").offsetHeight;
 
     // 灰色bar过渡到income bar，粉色bar过渡到cost bar（以income最大值映射）
@@ -520,36 +504,34 @@ function drawCountryCostChart(transitionMode) {
     const yPos = margin.top + (chartHeight - barHeight);
 
     if (currentField === "TagGNI") {
-      // income柱
+      // income-Balken
       let barIncome = document.createElement("div");
       barIncome.classList.add("bar", "income");
       barIncome.style.width = `${barWidth}px`;
       barIncome.style.height = `${gmynd.map(income, 0, maxIncome, 0, chartHeight)}px`;
       barIncome.style.left = `${xPos}px`;
       barIncome.style.top = `${margin.top + (chartHeight - gmynd.map(income, 0, maxIncome, 0, chartHeight))}px`;
+      barIncome.style.position = "absolute";
 
-      // cost柱（以 income 最大值映射）
+      // cost-Balken (mit income-Maximalwert abbilden)
       let barCost = document.createElement("div");
       barCost.classList.add("bar", "cost");
       barCost.style.width = `${barWidth}px`;
       barCost.style.height = `${gmynd.map(cost, 0, maxIncome, 0, chartHeight)}px`;
       barCost.style.left = `${xPos}px`;
       barCost.style.top = `${margin.top + (chartHeight - gmynd.map(cost, 0, maxIncome, 0, chartHeight))}px`;
+      barCost.style.position = "absolute";
 
-      barIncome.style.zIndex = "1";
-      barCost.style.zIndex = "2";
-
-      // 交互：income
+      // Interaktion: income
       barIncome.addEventListener('mouseenter', () => {
         tooltip.innerText = `${country["Country Name"]}: Income $${income.toFixed(2)}`;
         tooltip.style.display = "block";
         const barRect = barIncome.getBoundingClientRect();
         tooltip.style.left = `${barRect.right + 10}px`;
         tooltip.style.top = `${barRect.top}px`;
-        bars.forEach(b => b.classList.remove('active', 'faded'));
+        // 只高亮当前 bar，不影响其他 bar
         barIncome.classList.add('active');
         barIncome.style.backgroundColor = barIncome.dataset.activeColor;
-        barCost.style.backgroundColor = barCost.dataset.baseColor;
       });
       barIncome.addEventListener('mousemove', () => {
         const barRect = barIncome.getBoundingClientRect();
@@ -560,20 +542,17 @@ function drawCountryCostChart(transitionMode) {
         tooltip.style.display = "none";
         barIncome.classList.remove('active');
         barIncome.style.backgroundColor = barIncome.dataset.baseColor;
-        barCost.style.backgroundColor = barCost.dataset.baseColor;
       });
 
-      // 交互：cost
+      // Interaktion: cost
       barCost.addEventListener('mouseenter', () => {
         tooltip.innerText = `${country["Country Name"]}: Cost $${cost}`;
         tooltip.style.display = "block";
         const barRect = barCost.getBoundingClientRect();
         tooltip.style.left = `${barRect.right + 10}px`;
         tooltip.style.top = `${barRect.top}px`;
-        bars.forEach(b => b.classList.remove('active', 'faded'));
         barCost.classList.add('active');
         barCost.style.backgroundColor = barCost.dataset.activeColor;
-        barIncome.style.backgroundColor = barIncome.dataset.baseColor;
       });
       barCost.addEventListener('mousemove', () => {
         const barRect = barCost.getBoundingClientRect();
@@ -584,40 +563,37 @@ function drawCountryCostChart(transitionMode) {
         tooltip.style.display = "none";
         barCost.classList.remove('active');
         barCost.style.backgroundColor = barCost.dataset.baseColor;
-        barIncome.style.backgroundColor = barIncome.dataset.baseColor;
       });
 
       document.querySelector("#renderer").appendChild(barIncome);
       document.querySelector("#renderer").appendChild(barCost);
       bars.push(barIncome, barCost);
     } else if (["Cost", "Vergleich"].includes(currentField)) {
-      // Ratio页面：先画灰色底bar（100%），再画粉色bar（实际比例）
+      // Ratio-Seite: zuerst grauer Hintergrundbalken (100%), dann rosa Balken (tatsächliches Verhältnis)
       if (currentField === "Vergleich") {
-        // 灰色底bar（100%）
+        // Grauer Hintergrundbalken (100%)
         let barBg = document.createElement("div");
         barBg.classList.add("bar", "ratio-bg");
         barBg.style.width = `${barWidth}px`;
         barBg.style.height = `${gmynd.map(100, 0, maxVergleich, 0, chartHeight)}px`;
         barBg.style.left = `${xPos}px`;
         barBg.style.top = `${margin.top + (chartHeight - gmynd.map(100, 0, maxVergleich, 0, chartHeight))}px`;
-        barBg.style.backgroundColor = "#E1E5E8";
         barBg.style.position = "absolute";
+        // 不再设置 backgroundColor
         document.querySelector("#renderer").appendChild(barBg);
       }
 
-      // 粉色bar
+      // Rosa Balken
       let bar = document.createElement("div");
       bar.classList.add("bar");
       bar.style.width = `${barWidth}px`;
       bar.style.height = `${barHeight}px`;
       bar.style.left = `${xPos}px`;
       bar.style.top = `${yPos}px`;
-      // 颜色统一为粉色
-      bar.style.backgroundColor = "#EFC5D8";
-      bar.dataset.baseColor = "#EFC5D8";
-      bar.dataset.activeColor = "#FD96B3";
-      bar.dataset.fadedColor = "#EFC5D8";
       bar.style.position = "absolute";
+      // 不再设置 backgroundColor、borderRadius、zIndex
+      bar.dataset.baseColor = "#FED5E1";
+      bar.dataset.activeColor = "#FD96B3";
 
       bar.addEventListener('mouseenter', () => {
         let val = fieldValue;
@@ -630,8 +606,7 @@ function drawCountryCostChart(transitionMode) {
         tooltip.style.top = `${barRect.top}px`;
 
         bars.forEach(b => {
-          b.classList.remove('active', 'faded');
-          if (b !== bar) b.classList.add('faded');
+          b.classList.remove('active');
         });
         bar.classList.add('active');
         bar.style.backgroundColor = bar.dataset.activeColor;
@@ -644,7 +619,7 @@ function drawCountryCostChart(transitionMode) {
       bar.addEventListener('mouseleave', () => {
         tooltip.style.display = "none";
         bars.forEach(b => {
-          b.classList.remove('active', 'faded');
+          b.classList.remove('active');
           b.style.backgroundColor = b.dataset.baseColor;
         });
       });
@@ -652,90 +627,136 @@ function drawCountryCostChart(transitionMode) {
       document.querySelector("#renderer").appendChild(bar);
       bars.push(bar);
     } else {
-      // 其余字段用原有方块阵列
-      let barDot = document.createElement("div");
-      barDot.classList.add("bar-dot");
-      barDot.style.width = `${barWidth}px`;
-      barDot.style.height = `${chartHeight}px`;
-      barDot.style.left = `${xPos}px`;
-      barDot.style.top = `${margin.top}px`;
-      barDot.style.position = "absolute";
+      // cost-Balken（灰色/半透明，底层）
+      let costBar = document.createElement("div");
+      costBar.classList.add("bar", "cost-background");
+      costBar.style.width = `${barWidth}px`;
+      const costBarHeight = gmynd.map(cost, 0, maxCost, 0, chartHeight);
+      costBar.style.height = `${costBarHeight}px`;
+      costBar.style.left = `${xPos}px`;
+      costBar.style.top = `${margin.top + (chartHeight - costBarHeight)}px`;
+      costBar.style.position = "absolute";
+      document.querySelector("#renderer").appendChild(costBar);
 
-      const squareSize = Math.max(8, Math.floor(barWidth * 0.8));
-      const gapSize = 3;
-      const maxSquares = Math.floor(chartHeight / (squareSize + gapSize));
-      const numSquares = Math.max(1, Math.round(barHeight / chartHeight * maxSquares));
+      // 普通粉色bar（顶层）
+      let bar = document.createElement("div");
+      bar.classList.add("bar");
+      bar.style.width = `${barWidth}px`;
+      bar.style.height = `${barHeight}px`;
+      bar.style.left = `${xPos}px`;
+      bar.style.top = `${yPos}px`;
+      bar.style.position = "absolute";
+      // 不再设置 backgroundColor、borderRadius、zIndex
+      bar.dataset.baseColor = "#FED5E1";
+      bar.dataset.activeColor = "#FD96B3";
 
-      const squares = [];
-      for (let j = 0; j < numSquares; j++) {
-        let sq = document.createElement("div");
-        sq.classList.add("bar-dot-square");
-        sq.style.backgroundColor = "#80C9BD";
-        squares.push(sq);
-        barDot.appendChild(sq);
-      }
+      bar.addEventListener('mouseenter', () => {
+        tooltip.innerText = `${country["Country Name"]}: ${cost}`;
+        tooltip.style.display = "block";
+        const barRect = bar.getBoundingClientRect();
+        tooltip.style.left = `${barRect.right + 10}px`;
+        tooltip.style.top = `${barRect.top}px`;
 
-      squares.forEach(sq => {
-        sq.addEventListener('mouseenter', () => {
-          tooltip.innerText = `${country["Country Name"]}: ${cost}`;
-          tooltip.style.display = "block";
-          const sqRect = sq.getBoundingClientRect();
-          tooltip.style.left = `${sqRect.right + 10}px`;
-          tooltip.style.top = `${sqRect.top}px`;
-
-          bars.forEach(b => {
-            if (b !== barDot) {
-              Array.from(b.children).forEach(child => {
-                child.classList.remove('active');
-                child.classList.add('faded');
-              });
-            }
-          });
-          squares.forEach(child => {
-            child.classList.remove('faded');
-            child.classList.add('active');
-          });
-        });
-        sq.addEventListener('mousemove', () => {
-          const sqRect = sq.getBoundingClientRect();
-          tooltip.style.left = `${sqRect.right + 10}px`;
-          tooltip.style.top = `${sqRect.top}px`;
-        });
-        sq.addEventListener('mouseleave', () => {
-          tooltip.style.display = "none";
-          bars.forEach(b => {
-            Array.from(b.children).forEach(child => {
-              child.classList.remove('active', 'faded');
-            });
-          });
-        });
+        // 只高亮当前 bar，不影响其他 bar
+        bar.classList.add('active');
+        bar.style.backgroundColor = bar.dataset.activeColor;
+      });
+      bar.addEventListener('mousemove', () => {
+        const barRect = bar.getBoundingClientRect();
+        tooltip.style.left = `${barRect.right + 10}px`;
+        tooltip.style.top = `${barRect.top}px`;
+      });
+      bar.addEventListener('mouseleave', () => {
+        tooltip.style.display = "none";
+        bar.classList.remove('active');
+        bar.style.backgroundColor = bar.dataset.baseColor;
       });
 
-      document.querySelector("#renderer").appendChild(barDot);
-      bars.push(barDot);
+      document.querySelector("#renderer").appendChild(bar);
+      bars.push(bar);
     }
   });
 }
 
-// 在文件末尾添加散点图渲染函数
-function drawScatterChart() {
+function barToScatterUltraSmoothTransition() {
+  let topOptions = document.querySelector("#top-area > div:last-child");
+  if (topOptions) topOptions.style.display = "none";
+
   document.querySelector("#renderer").innerHTML = "";
   let oldArea = document.getElementById("checkbox-area");
   if (oldArea) oldArea.remove();
-  // 画布尺寸
-  const data = [...jsonData];
+
+  // ----------- 新增：右上角切换按钮 -----------
+  const scatterFields = [
+    { key: "Vergleich", label: "Ratio" },
+    { key: "Percent cannot afford", label: "Unaffordability" },
+    { key: "Unterernährung", label: "Malnutrition" }
+  ];
+  // 保持切换状态
+  if (!barToScatterUltraSmoothTransition.currentScatterField) {
+    barToScatterUltraSmoothTransition.currentScatterField = "Vergleich";
+  }
+  let currentScatterField = barToScatterUltraSmoothTransition.currentScatterField;
+
+  // 标记是否已进入scatter页面
+  if (typeof barToScatterUltraSmoothTransition.hasEnteredScatter === "undefined") {
+    barToScatterUltraSmoothTransition.hasEnteredScatter = false;
+  }
+
+  // 按钮区域
+  let scatterTop = document.createElement("div");
+  scatterTop.style.display = "flex";
+  scatterTop.style.gap = "18px";
+  scatterTop.style.zIndex = "30";
+  scatterTop.id = "scatter-top-btns";
+
+  scatterFields.forEach(f => {
+    let btn = document.createElement("button");
+    btn.textContent = f.label;
+    btn.classList.add("top-btn");
+    if (f.key === currentScatterField) btn.classList.add("active");
+    btn.addEventListener("mouseenter", () => btn.classList.add("active"));
+    btn.addEventListener("mouseleave", () => {
+      if (barToScatterUltraSmoothTransition.currentScatterField !== f.key) btn.classList.remove("active");
+    });
+    btn.addEventListener("click", () => {
+      barToScatterUltraSmoothTransition.currentScatterField = f.key;
+      // 刷新按钮激活状态
+      Array.from(scatterTop.children).forEach((b, idx) => {
+        if (scatterFields[idx].key === f.key) {
+          b.classList.add("active");
+        } else {
+          b.classList.remove("active");
+        }
+      });
+      // 仅切换散点大小，不再执行bar到dot动画
+      barToScatterUltraSmoothTransition.hasEnteredScatter = true;
+      barToScatterUltraSmoothTransition();
+    });
+    scatterTop.appendChild(btn);
+  });
+  // 先移除旧的
+  let oldScatterTop = document.getElementById("scatter-top-btns");
+  if (oldScatterTop) oldScatterTop.remove();
+  document.querySelector("#top-area").appendChild(scatterTop);
+
+  const data = [...jsonData].sort((a, b) => parseFloat(b.TagGNI) - parseFloat(a.TagGNI));
   const chartWidth = stageWidth - margin.left - margin.right;
   const chartHeight = stageHeight - margin.top - margin.bottom;
+  const gap = 6;
+  const barWidth = (chartWidth - gap * (data.length - 1)) / data.length;
 
-  // 计算横纵轴范围
   const minX = Math.min(...data.map(d => parseFloat(d["TagGNI"])));
   const maxX = Math.max(...data.map(d => parseFloat(d["TagGNI"])));
   const minY = Math.min(...data.map(d => parseFloat(d["Cost"])));
   const maxY = Math.max(...data.map(d => parseFloat(d["Cost"])));
-  const minR = Math.min(...data.map(d => parseFloat(d["Vergleich"])));
-  const maxR = Math.max(...data.map(d => parseFloat(d["Vergleich"])));
 
-  // 画坐标轴
+  // 新增：根据当前按钮选择的字段决定散点大小
+  const rField = barToScatterUltraSmoothTransition.currentScatterField || "Vergleich";
+  const minR = Math.min(...data.map(d => parseFloat(d[rField])));
+  const maxR = Math.max(...data.map(d => parseFloat(d[rField])));
+
+  // Achsen zeichnen
   let axisX = document.createElement("div");
   axisX.style.position = "absolute";
   axisX.style.left = `${margin.left}px`;
@@ -754,7 +775,7 @@ function drawScatterChart() {
   axisY.style.background = "#bbb";
   document.querySelector("#renderer").appendChild(axisY);
 
-  // 横轴标签
+  // X-Achsen-Beschriftung
   let xlabel = document.createElement("div");
   xlabel.textContent = "Income (TagGNI)";
   xlabel.style.position = "absolute";
@@ -764,7 +785,7 @@ function drawScatterChart() {
   xlabel.style.fontSize = "14px";
   document.querySelector("#renderer").appendChild(xlabel);
 
-  // 纵轴标签
+  // Y-Achsen-Beschriftung
   let ylabel = document.createElement("div");
   ylabel.textContent = "Cost";
   ylabel.style.position = "absolute";
@@ -781,166 +802,155 @@ function drawScatterChart() {
   tooltip.classList.add("tooltip");
   document.body.appendChild(tooltip);
 
-  // 画点
-  data.forEach(d => {
-    const x = gmynd.map(parseFloat(d["TagGNI"]), minX, maxX, 0, chartWidth);
-    const y = gmynd.map(parseFloat(d["Cost"]), minY, maxY, chartHeight, 0);
-    const r = gmynd.map(parseFloat(d["Vergleich"]), minR, maxR, 10, 32);
+  // 只在第一次 bar->scatter 时执行动画，后续切换仅变大小
+  if (!barToScatterUltraSmoothTransition.hasEnteredScatter) {
+    // Zuerst Balken zeichnen
+    let barDots = [];
+    let startStates = [];
+    let endStates = [];
+    data.forEach((country, i) => {
+      const cost = parseFloat(country["Cost"]);
+      const barHeight = gmynd.map(cost, 0, Math.max(...data.map(d => parseFloat(d["Cost"]))), 0, chartHeight);
+      const xPos = margin.left + i * (barWidth + gap);
+      const yPos = margin.top + (chartHeight - barHeight);
+
+      // 目标
+      const logMinX = Math.log10(minX);
+      const logMaxX = Math.log10(maxX);
+      const logMinY = Math.log10(minY);
+      const logMaxY = Math.log10(maxY);
+
+      const x = gmynd.map(Math.log10(parseFloat(country["TagGNI"])), logMinX, logMaxX, 0, chartWidth);
+      const y = gmynd.map(Math.log10(parseFloat(country["Cost"])), logMinY, logMaxY, chartHeight, 0);
+      // 新增：r 根据当前字段
+      const r = gmynd.map(parseFloat(country[rField]), minR, maxR, 20, 160);
+
+      let bar = document.createElement("div");
+      bar.classList.add("bar", "bar-to-dot");
+      // 不再设置 backgroundColor、opacity、borderRadius，全部交由CSS
+      bar.style.width = `${barWidth}px`;
+      bar.style.height = `${barHeight}px`;
+      bar.style.left = `${xPos}px`;
+      bar.style.top = `${yPos}px`;
+      bar.style.position = "absolute";
+      bar.style.cursor = "pointer";
+      document.querySelector("#renderer").appendChild(bar);
+      barDots.push(bar);
+
+      startStates.push({
+        width: barWidth,
+        height: barHeight,
+        left: xPos,
+        top: yPos,
+        borderRadius: 8
+      });
+      endStates.push({
+        width: r,
+        height: r,
+        left: margin.left + x - r / 2,
+        top: margin.top + y - r / 2,
+        borderRadius: r / 2
+      });
+    });
+
+    // 绑定交互，动画过程中也能响应
+    data.forEach((country, i) => {
+      let bar = barDots[i];
+      bar.onmouseenter = () => {
+        bar.style.opacity = "1";
+        // tooltip内容根据当前字段显示
+        let rLabel = "";
+        if (rField === "Vergleich") rLabel = `Ratio: ${country["Vergleich"]}%`;
+        else if (rField === "Percent cannot afford") rLabel = `Unaffordability: ${country["Percent cannot afford"]}%`;
+        else if (rField === "Unterernährung") rLabel = `Malnutrition: ${country["Unterernährung"]}%`;
+        tooltip.innerText = `${country["Country Name"]}\nIncome: $${country["TagGNI"]}\nCost: $${country["Cost"]}\n${rLabel}`;
+        tooltip.style.display = "block";
+        tooltip.style.left = `${bar.getBoundingClientRect().right + 10}px`;
+        tooltip.style.top = `${bar.getBoundingClientRect().top}px`;
+      };
+      bar.onmousemove = () => {
+        tooltip.style.left = `${bar.getBoundingClientRect().right + 10}px`;
+        tooltip.style.top = `${bar.getBoundingClientRect().top}px`;
+      };
+      bar.onmouseleave = () => {
+        bar.style.opacity = "0.2";
+        tooltip.style.display = "none";
+      };
+    });
+
+    // 动画插值
+    let duration = 900; // ms
+    let startTime = null;
+    function animate(now) {
+      if (!startTime) startTime = now;
+      let t = Math.min(1, (now - startTime) / duration);
+      // easeInOutCubic
+      t = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      for (let i = 0; i < barDots.length; i++) {
+        let s = startStates[i], e = endStates[i], bar = barDots[i];
+        bar.style.width = (s.width + (e.width - s.width) * t) + "px";
+        bar.style.height = (s.height + (e.height - s.height) * t) + "px";
+        bar.style.left = (s.left + (e.left - s.left) * t) + "px";
+        bar.style.top = (s.top + (e.top - s.top) * t) + "px";
+        bar.style.borderRadius = (s.borderRadius + (e.borderRadius - s.borderRadius) * t) + "px";
+      }
+      if (t < 1) {
+        requestAnimationFrame(animate);
+      }
+    }
+    requestAnimationFrame(animate);
+
+    // 标记已进入scatter
+    barToScatterUltraSmoothTransition.hasEnteredScatter = true;
+    return;
+  }
+
+  // 已在scatter页面，切换字段时仅变大小
+  // 先移除旧的散点
+  document.querySelectorAll(".bar-to-dot").forEach(el => el.remove());
+
+  // 重新绘制所有散点，带动画，仅变大小
+  let dots = [];
+  let prevRField = barToScatterUltraSmoothTransition.prevRField || rField;
+  const prevMinR = Math.min(...data.map(d => parseFloat(d[prevRField])));
+  const prevMaxR = Math.max(...data.map(d => parseFloat(d[prevRField])));
+  data.forEach((country, i) => {
+    const logMinX = Math.log10(minX);
+    const logMaxX = Math.log10(maxX);
+    const logMinY = Math.log10(minY);
+    const logMaxY = Math.log10(maxY);
+
+    const x = gmynd.map(Math.log10(parseFloat(country["TagGNI"])), logMinX, logMaxX, 0, chartWidth);
+    const y = gmynd.map(Math.log10(parseFloat(country["Cost"])), logMinY, logMaxY, chartHeight, 0);
+
+    // 上一次的半径
+    const prevR = gmynd.map(parseFloat(country[prevRField]), prevMinR, prevMaxR, 20, 160);
+    // 目标半径
+    const r = gmynd.map(parseFloat(country[rField]), minR, maxR, 20, 160);
 
     let dot = document.createElement("div");
+    dot.classList.add("bar", "bar-to-dot");
+    // 不再设置 backgroundColor、opacity、borderRadius，全部交由CSS
     dot.style.position = "absolute";
-    dot.style.left = `${margin.left + x - r / 2}px`;
-    dot.style.top = `${margin.top + y - r / 2}px`;
-    dot.style.width = `${r}px`;
-    dot.style.height = `${r}px`;
-    dot.style.borderRadius = "50%";
-    dot.style.background = "#EFC5D8";
-    dot.style.opacity = "0.8";
-    dot.style.boxShadow = "0 2px 8px #eee";
+    dot.style.left = `${margin.left + x - prevR / 2}px`;
+    dot.style.top = `${margin.top + y - prevR / 2}px`;
+    dot.style.width = `${prevR}px`;
+    dot.style.height = `${prevR}px`;
     dot.style.cursor = "pointer";
-    dot.style.transition = "box-shadow 0.2s, opacity 0.2s";
-
-    dot.addEventListener("mouseenter", () => {
-      dot.style.opacity = "1";
-      dot.style.boxShadow = "0 4px 16px #EFC5D8";
-      tooltip.innerText = `${d["Country Name"]}\nIncome: $${d["TagGNI"]}\nCost: $${d["Cost"]}\nRatio: ${d["Vergleich"]}%`;
-      tooltip.style.display = "block";
-      tooltip.style.left = `${dot.getBoundingClientRect().right + 10}px`;
-      tooltip.style.top = `${dot.getBoundingClientRect().top}px`;
-    });
-    dot.addEventListener("mousemove", () => {
-      tooltip.style.left = `${dot.getBoundingClientRect().right + 10}px`;
-      tooltip.style.top = `${dot.getBoundingClientRect().top}px`;
-    });
-    dot.addEventListener("mouseleave", () => {
-      dot.style.opacity = "0.8";
-      dot.style.boxShadow = "0 2px 8px #eee";
-      tooltip.style.display = "none";
-    });
-
     document.querySelector("#renderer").appendChild(dot);
-  });
-}
-
-// 平滑条形图到散点图过渡
-function barToScatterSmoothTransition() {
-  document.querySelector("#renderer").innerHTML = "";
-  let oldArea = document.getElementById("checkbox-area");
-  if (oldArea) oldArea.remove();
-
-  const data = [...jsonData].sort((a, b) => parseFloat(b.TagGNI) - parseFloat(a.TagGNI));
-  const chartWidth = stageWidth - margin.left - margin.right;
-  const chartHeight = stageHeight - margin.top - margin.bottom;
-  const gap = 6;
-  const barWidth = (chartWidth - gap * (data.length - 1)) / data.length;
-
-  const minX = Math.min(...data.map(d => parseFloat(d["TagGNI"])));
-  const maxX = Math.max(...data.map(d => parseFloat(d["TagGNI"])));
-  const minY = Math.min(...data.map(d => parseFloat(d["Cost"])));
-  const maxY = Math.max(...data.map(d => parseFloat(d["Cost"])));
-  const minR = Math.min(...data.map(d => parseFloat(d["Vergleich"])));
-  const maxR = Math.max(...data.map(d => parseFloat(d["Vergleich"])));
-
-  // 画坐标轴
-  let axisX = document.createElement("div");
-  axisX.style.position = "absolute";
-  axisX.style.left = `${margin.left}px`;
-  axisX.style.top = `${margin.top + chartHeight}px`;
-  axisX.style.width = `${chartWidth}px`;
-  axisX.style.height = "1px";
-  axisX.style.background = "#bbb";
-  document.querySelector("#renderer").appendChild(axisX);
-
-  let axisY = document.createElement("div");
-  axisY.style.position = "absolute";
-  axisY.style.left = `${margin.left}px`;
-  axisY.style.top = `${margin.top}px`;
-  axisY.style.width = "1px";
-  axisY.style.height = `${chartHeight}px`;
-  axisY.style.background = "#bbb";
-  document.querySelector("#renderer").appendChild(axisY);
-
-  // 横轴标签
-  let xlabel = document.createElement("div");
-  xlabel.textContent = "Income (TagGNI)";
-  xlabel.style.position = "absolute";
-  xlabel.style.left = `${margin.left + chartWidth / 2 - 40}px`;
-  xlabel.style.top = `${margin.top + chartHeight + 30}px`;
-  xlabel.style.color = "#6B7C8D";
-  xlabel.style.fontSize = "14px";
-  document.querySelector("#renderer").appendChild(xlabel);
-
-  // 纵轴标签
-  let ylabel = document.createElement("div");
-  ylabel.textContent = "Cost";
-  ylabel.style.position = "absolute";
-  ylabel.style.left = `${margin.left - 50}px`;
-  ylabel.style.top = `${margin.top + chartHeight / 2 - 30}px`;
-  ylabel.style.transform = "rotate(-90deg)";
-  ylabel.style.transformOrigin = "left top";
-  ylabel.style.color = "#6B7C8D";
-  ylabel.style.fontSize = "14px";
-  document.querySelector("#renderer").appendChild(ylabel);
-
-  // tooltip
-  let tooltip = document.createElement("div");
-  tooltip.classList.add("tooltip");
-  document.body.appendChild(tooltip);
-
-  // 先画条形
-  let barDots = [];
-  data.forEach((country, i) => {
-    const cost = parseFloat(country["Cost"]);
-    const barHeight = gmynd.map(cost, 0, Math.max(...data.map(d => parseFloat(d["Cost"]))), 0, chartHeight);
-    const xPos = margin.left + i * (barWidth + gap);
-    const yPos = margin.top + (chartHeight - barHeight);
-
-    let bar = document.createElement("div");
-    bar.classList.add("bar", "bar-to-dot");
-    bar.style.width = `${barWidth}px`;
-    bar.style.height = `${barHeight}px`;
-    bar.style.left = `${xPos}px`;
-    bar.style.top = `${yPos}px`;
-    bar.style.position = "absolute";
-    bar.style.backgroundColor = "#EFC5D8";
-    bar.style.borderRadius = "8px";
-    bar.style.transition = "all 0.8s cubic-bezier(.7,0,.3,1)";
-    bar.dataset.country = country["Country Name"];
-    document.querySelector("#renderer").appendChild(bar);
-    barDots.push(bar);
+    dots.push({dot, x, y, prevR, r});
   });
 
-  // 强制reflow
-  void document.querySelector("#renderer").offsetHeight;
-
-  // 过渡到散点
-  setTimeout(() => {
-    data.forEach((country, i) => {
-      const x = gmynd.map(parseFloat(country["TagGNI"]), minX, maxX, 0, chartWidth);
-      const y = gmynd.map(parseFloat(country["Cost"]), minY, maxY, chartHeight, 0);
-      const r = gmynd.map(parseFloat(country["Vergleich"]), minR, maxR, 10, 32);
-
-      let bar = barDots[i];
-      bar.style.width = `${r}px`;
-      bar.style.height = `${r}px`;
-      bar.style.left = `${margin.left + x - r / 2}px`;
-      bar.style.top = `${margin.top + y - r / 2}px`;
-      bar.style.borderRadius = "50%";
-      bar.style.backgroundColor = "#EFC5D8";
-      bar.style.boxShadow = "0 2px 8px #eee";
-      bar.style.opacity = "0.8";
-      bar.style.zIndex = "2";
-      bar.style.cursor = "pointer";
-    });
-  }, 10);
-
-  // 绑定交互，动画过程中也能响应
+  // 绑定交互
   data.forEach((country, i) => {
-    let bar = barDots[i];
+    let bar = dots[i].dot;
     bar.onmouseenter = () => {
       bar.style.opacity = "1";
-      bar.style.boxShadow = "0 4px 16px #EFC5D8";
-      tooltip.innerText = `${country["Country Name"]}\nIncome: $${country["TagGNI"]}\nCost: $${country["Cost"]}\nRatio: ${country["Vergleich"]}%`;
+      let rLabel = "";
+      if (rField === "Vergleich") rLabel = `Ratio: ${country["Vergleich"]}%`;
+      else if (rField === "Percent cannot afford") rLabel = `Unaffordability: ${country["Percent cannot afford"]}%`;
+      else if (rField === "Unterernährung") rLabel = `Malnutrition: ${country["Unterernährung"]}%`;
+      tooltip.innerText = `${country["Country Name"]}\nIncome: $${country["TagGNI"]}\nCost: $${country["Cost"]}\n${rLabel}`;
       tooltip.style.display = "block";
       tooltip.style.left = `${bar.getBoundingClientRect().right + 10}px`;
       tooltip.style.top = `${bar.getBoundingClientRect().top}px`;
@@ -951,187 +961,32 @@ function barToScatterSmoothTransition() {
     };
     bar.onmouseleave = () => {
       bar.style.opacity = "0.8";
-      bar.style.boxShadow = "0 2px 8px #eee";
       tooltip.style.display = "none";
     };
   });
 
-  // 动画插值
-  let duration = 900; // ms
+  // 动画插值，仅变大小
+  let duration = 600;
   let startTime = null;
-  function animate(now) {
+  function animateDotSize(now) {
     if (!startTime) startTime = now;
     let t = Math.min(1, (now - startTime) / duration);
-    // easeInOutCubic
     t = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-    for (let i = 0; i < barDots.length; i++) {
-      let s = startStates[i], e = endStates[i], bar = barDots[i];
-      bar.style.width = (s.width + (e.width - s.width) * t) + "px";
-      bar.style.height = (s.height + (e.height - s.height) * t) + "px";
-      bar.style.left = (s.left + (e.left - s.left) * t) + "px";
-      bar.style.top = (s.top + (e.top - s.top) * t) + "px";
-      bar.style.borderRadius = (s.borderRadius + (e.borderRadius - s.borderRadius) * t) + "px";
+    for (let i = 0; i < dots.length; i++) {
+      let {dot, x, y, prevR, r} = dots[i];
+      let curR = prevR + (r - prevR) * t;
+      dot.style.width = `${curR}px`;
+      dot.style.height = `${curR}px`;
+      dot.style.left = `${margin.left + x - curR / 2}px`;
+      dot.style.top = `${margin.top + y - curR / 2}px`;
+      dot.style.borderRadius = `${curR / 2}px`;
     }
     if (t < 1) {
-      requestAnimationFrame(animate);
+      requestAnimationFrame(animateDotSize);
     }
   }
-  requestAnimationFrame(animate);
-}
+  requestAnimationFrame(animateDotSize);
 
-// 更顺滑的条形图到散点图过渡（requestAnimationFrame插值动画）
-function barToScatterUltraSmoothTransition() {
-  document.querySelector("#renderer").innerHTML = "";
-  let oldArea = document.getElementById("checkbox-area");
-  if (oldArea) oldArea.remove();
-
-  const data = [...jsonData].sort((a, b) => parseFloat(b.TagGNI) - parseFloat(a.TagGNI));
-  const chartWidth = stageWidth - margin.left - margin.right;
-  const chartHeight = stageHeight - margin.top - margin.bottom;
-  const gap = 6;
-  const barWidth = (chartWidth - gap * (data.length - 1)) / data.length;
-
-  const minX = Math.min(...data.map(d => parseFloat(d["TagGNI"])));
-  const maxX = Math.max(...data.map(d => parseFloat(d["TagGNI"])));
-  const minY = Math.min(...data.map(d => parseFloat(d["Cost"])));
-  const maxY = Math.max(...data.map(d => parseFloat(d["Cost"])));
-  const minR = Math.min(...data.map(d => parseFloat(d["Vergleich"])));
-  const maxR = Math.max(...data.map(d => parseFloat(d["Vergleich"])));
-
-  // 画坐标轴
-  let axisX = document.createElement("div");
-  axisX.style.position = "absolute";
-  axisX.style.left = `${margin.left}px`;
-  axisX.style.top = `${margin.top + chartHeight}px`;
-  axisX.style.width = `${chartWidth}px`;
-  axisX.style.height = "1px";
-  axisX.style.background = "#bbb";
-  document.querySelector("#renderer").appendChild(axisX);
-
-  let axisY = document.createElement("div");
-  axisY.style.position = "absolute";
-  axisY.style.left = `${margin.left}px`;
-  axisY.style.top = `${margin.top}px`;
-  axisY.style.width = "1px";
-  axisY.style.height = `${chartHeight}px`;
-  axisY.style.background = "#bbb";
-  document.querySelector("#renderer").appendChild(axisY);
-
-  // 横轴标签
-  let xlabel = document.createElement("div");
-  xlabel.textContent = "Income (TagGNI)";
-  xlabel.style.position = "absolute";
-  xlabel.style.left = `${margin.left + chartWidth / 2 - 40}px`;
-  xlabel.style.top = `${margin.top + chartHeight + 30}px`;
-  xlabel.style.color = "#6B7C8D";
-  xlabel.style.fontSize = "14px";
-  document.querySelector("#renderer").appendChild(xlabel);
-
-  // 纵轴标签
-  let ylabel = document.createElement("div");
-  ylabel.textContent = "Cost";
-  ylabel.style.position = "absolute";
-  ylabel.style.left = `${margin.left - 50}px`;
-  ylabel.style.top = `${margin.top + chartHeight / 2 - 30}px`;
-  ylabel.style.transform = "rotate(-90deg)";
-  ylabel.style.transformOrigin = "left top";
-  ylabel.style.color = "#6B7C8D";
-  ylabel.style.fontSize = "14px";
-  document.querySelector("#renderer").appendChild(ylabel);
-
-  // tooltip
-  let tooltip = document.createElement("div");
-  tooltip.classList.add("tooltip");
-  document.body.appendChild(tooltip);
-
-  // 先画条形
-  let barDots = [];
-  let startStates = [];
-  let endStates = [];
-  data.forEach((country, i) => {
-    const cost = parseFloat(country["Cost"]);
-    const barHeight = gmynd.map(cost, 0, Math.max(...data.map(d => parseFloat(d["Cost"]))), 0, chartHeight);
-    const xPos = margin.left + i * (barWidth + gap);
-    const yPos = margin.top + (chartHeight - barHeight);
-
-    // 目标
-    const x = gmynd.map(parseFloat(country["TagGNI"]), minX, maxX, 0, chartWidth);
-    const y = gmynd.map(parseFloat(country["Cost"]), minY, maxY, chartHeight, 0);
-    const r = gmynd.map(parseFloat(country["Vergleich"]), minR, maxR, 10, 32);
-
-    let bar = document.createElement("div");
-    bar.classList.add("bar", "bar-to-dot");
-    bar.style.width = `${barWidth}px`;
-    bar.style.height = `${barHeight}px`;
-    bar.style.left = `${xPos}px`;
-    bar.style.top = `${yPos}px`;
-    bar.style.position = "absolute";
-    bar.style.backgroundColor = "#EFC5D8";
-    bar.style.borderRadius = "8px";
-    bar.style.boxShadow = "0 2px 8px #eee";
-    bar.style.opacity = "0.8";
-    bar.style.zIndex = "2";
-    bar.style.cursor = "pointer";
-    document.querySelector("#renderer").appendChild(bar);
-    barDots.push(bar);
-
-    startStates.push({
-      width: barWidth,
-      height: barHeight,
-      left: xPos,
-      top: yPos,
-      borderRadius: 8
-    });
-    endStates.push({
-      width: r,
-      height: r,
-      left: margin.left + x - r / 2,
-      top: margin.top + y - r / 2,
-      borderRadius: r / 2
-    });
-  });
-
-  // 绑定交互，动画过程中也能响应
-  data.forEach((country, i) => {
-    let bar = barDots[i];
-    bar.onmouseenter = () => {
-      bar.style.opacity = "1";
-      bar.style.boxShadow = "0 4px 16px #EFC5D8";
-      tooltip.innerText = `${country["Country Name"]}\nIncome: $${country["TagGNI"]}\nCost: $${country["Cost"]}\nRatio: ${country["Vergleich"]}%`;
-      tooltip.style.display = "block";
-      tooltip.style.left = `${bar.getBoundingClientRect().right + 10}px`;
-      tooltip.style.top = `${bar.getBoundingClientRect().top}px`;
-    };
-    bar.onmousemove = () => {
-      tooltip.style.left = `${bar.getBoundingClientRect().right + 10}px`;
-      tooltip.style.top = `${bar.getBoundingClientRect().top}px`;
-    };
-    bar.onmouseleave = () => {
-      bar.style.opacity = "0.8";
-      bar.style.boxShadow = "0 2px 8px #eee";
-      tooltip.style.display = "none";
-    };
-  });
-
-  // 动画插值
-  let duration = 900; // ms
-  let startTime = null;
-  function animate(now) {
-    if (!startTime) startTime = now;
-    let t = Math.min(1, (now - startTime) / duration);
-    // easeInOutCubic
-    t = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-    for (let i = 0; i < barDots.length; i++) {
-      let s = startStates[i], e = endStates[i], bar = barDots[i];
-      bar.style.width = (s.width + (e.width - s.width) * t) + "px";
-      bar.style.height = (s.height + (e.height - s.height) * t) + "px";
-      bar.style.left = (s.left + (e.left - s.left) * t) + "px";
-      bar.style.top = (s.top + (e.top - s.top) * t) + "px";
-      bar.style.borderRadius = (s.borderRadius + (e.borderRadius - s.borderRadius) * t) + "px";
-    }
-    if (t < 1) {
-      requestAnimationFrame(animate);
-    }
-  }
-  requestAnimationFrame(animate);
+  // 记录当前字段，供下次切换用
+  barToScatterUltraSmoothTransition.prevRField = rField;
 }
