@@ -47,33 +47,99 @@ function init() {
   title.classList.add("top-btn", "main", "active");
 
   title.addEventListener("mouseenter", () => {
-    title.classList.add("active");
-    title.classList.remove("inactive");
-  });
-  title.addEventListener("mouseleave", () => {
-    if (!title.classList.contains("active")) {
+    if (!affordabilityBtn.classList.contains("active")) {
+      title.classList.add("active");
       title.classList.remove("inactive");
     }
   });
+  title.addEventListener("mouseleave", () => {
+    if (affordabilityBtn.classList.contains("active")) {
+      title.classList.remove("active");
+      title.classList.add("inactive");
+    }
+  });
   title.addEventListener("click", () => {
-    drawCountryCostChart();
+    // Reset scatter transition state
+    barToScatterUltraSmoothTransition.hasEnteredScatter = false;
+    barToScatterUltraSmoothTransition.currentScatterField = "Vergleich";
+    barToScatterUltraSmoothTransition.prevRField = "Vergleich";
+    
+    // Remove scatter plot buttons if they exist
+    let scatterTop = document.getElementById("scatter-top-btns");
+    if (scatterTop) scatterTop.remove();
+    
+    // Show top field options again
+    let topOptions = document.querySelector("#top-area > div:last-child");
+    if (topOptions) {
+      topOptions.style.display = "flex";
+      // Update top field buttons active state
+      Array.from(topOptions.children).forEach((b, idx) => {
+        if (topFields[idx].key === "Cost") {
+          b.classList.add("active");
+        } else {
+          b.classList.remove("active");
+        }
+      });
+    }
+    
+    // Reset active states
     title.classList.add("active");
     title.classList.remove("inactive");
     affordabilityBtn.classList.remove("active");
     affordabilityBtn.classList.add("inactive");
-  }); 
+    
+    // Reset current field to Cost
+    currentField = "Cost";
+    currentTopField = "Cost";
+
+    // Get all current dots
+    const dots = document.querySelectorAll(".bar-to-dot");
+    if (dots.length > 0) {
+      // Create a sorted copy of jsonData
+      const data = [...jsonData].sort((a, b) => parseFloat(b.TagGNI) - parseFloat(a.TagGNI));
+      const chartWidth = stageWidth - margin.left - margin.right;
+      const chartHeight = stageHeight - margin.top - margin.bottom;
+      const gap = 6;
+      const barWidth = (chartWidth - gap * (data.length - 1)) / data.length;
+      const maxCost = Math.max(...data.map(d => parseFloat(d["Cost"])));
+
+      // Animate dots back to bars
+      dots.forEach((dot, i) => {
+        const cost = parseFloat(data[i]["Cost"]);
+        const barHeight = gmynd.map(cost, 0, maxCost, 0, chartHeight);
+        const xPos = margin.left + i * (barWidth + gap);
+        const yPos = margin.top + (chartHeight - barHeight);
+
+        // Animate back to bar shape
+        dot.style.width = `${barWidth}px`;
+        dot.style.height = `${barHeight}px`;
+        dot.style.left = `${xPos}px`;
+        dot.style.top = `${yPos}px`;
+        dot.style.borderRadius = "0";
+      });
+
+      // After transition, render the bar chart
+      setTimeout(() => {
+        drawCountryCostChart();
+      }, 900);
+    } else {
+      drawCountryCostChart();
+    }
+  });
 
   // Affordability-Button
   let affordabilityBtn = document.createElement("button");
   affordabilityBtn.textContent = "Affordability";
   affordabilityBtn.classList.add("top-btn", "main", "affordability", "inactive");
   affordabilityBtn.addEventListener("mouseenter", () => {
-    affordabilityBtn.classList.add("active");
-    affordabilityBtn.classList.remove("inactive");
+    if (!title.classList.contains("active")) {
+      affordabilityBtn.classList.add("active");
+      affordabilityBtn.classList.remove("inactive");
+    }
   });
   affordabilityBtn.addEventListener("mouseleave", () => {
-    affordabilityBtn.classList.add("inactive");
-    if (!affordabilityBtn.classList.contains("active")) {
+    if (title.classList.contains("active")) {
+      affordabilityBtn.classList.remove("active");
       affordabilityBtn.classList.add("inactive");
     }
   });
@@ -223,10 +289,10 @@ function renderCheckboxArea() {
   renderer.parentNode.appendChild(checkboxArea);
 }
 
-function drawCountryCostChart(transitionMode) { 
+function drawCountryCostChart(transitionMode) {
   let topOptions = document.querySelector("#top-area > div:last-child");
   if (topOptions) topOptions.style.display = "flex";
-  
+
   document.querySelector("#renderer").innerHTML = "";
 
   // Bei jedem Rendern der Balkendiagramme Checkbox-Bereich neu erzeugen
@@ -679,6 +745,7 @@ function drawCountryCostChart(transitionMode) {
 }
 
 function barToScatterUltraSmoothTransition() {
+
   let topOptions = document.querySelector("#top-area > div:last-child");
   if (topOptions) topOptions.style.display = "none";
 
@@ -695,6 +762,8 @@ function barToScatterUltraSmoothTransition() {
   // 保持切换状态
   if (!barToScatterUltraSmoothTransition.currentScatterField) {
     barToScatterUltraSmoothTransition.currentScatterField = "Vergleich";
+    // Initialize prevRField with the default field
+    barToScatterUltraSmoothTransition.prevRField = "Vergleich";
   }
   let currentScatterField = barToScatterUltraSmoothTransition.currentScatterField;
 
@@ -720,7 +789,10 @@ function barToScatterUltraSmoothTransition() {
       if (barToScatterUltraSmoothTransition.currentScatterField !== f.key) btn.classList.remove("active");
     });
     btn.addEventListener("click", () => {
+      // Save the current field before updating to the new one
+      barToScatterUltraSmoothTransition.prevRField = barToScatterUltraSmoothTransition.currentScatterField;
       barToScatterUltraSmoothTransition.currentScatterField = f.key;
+      
       // 刷新按钮激活状态
       Array.from(scatterTop.children).forEach((b, idx) => {
         if (scatterFields[idx].key === f.key) {
@@ -729,7 +801,7 @@ function barToScatterUltraSmoothTransition() {
           b.classList.remove("active");
         }
       });
-      // 仅切换散点大小，不再执行bar到dot动画
+      // 确保已进入scatter模式，这样切换时会执行动画
       barToScatterUltraSmoothTransition.hasEnteredScatter = true;
       barToScatterUltraSmoothTransition();
     });
@@ -834,22 +906,27 @@ function barToScatterUltraSmoothTransition() {
       bar.style.top = `${yPos}px`;
       bar.style.position = "absolute";
       bar.style.cursor = "pointer";
+      bar.style.transition = "width 0.9s cubic-bezier(0.4, 0, 0.2, 1), height 0.9s cubic-bezier(0.4, 0, 0.2, 1), left 0.9s cubic-bezier(0.4, 0, 0.2, 1), top 0.9s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.9s cubic-bezier(0.4, 0, 0.2, 1)";
       document.querySelector("#renderer").appendChild(bar);
       barDots.push(bar);
 
+      bar.style.transition = "none";
+      void bar.offsetHeight;  // Force reflow
+      bar.style.transition = "width 0.9s cubic-bezier(0.4, 0, 0.2, 1), height 0.9s cubic-bezier(0.4, 0, 0.2, 1), left 0.9s cubic-bezier(0.4, 0, 0.2, 1), top 0.9s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.9s cubic-bezier(0.4, 0, 0.2, 1)";
+      
       startStates.push({
         width: barWidth,
         height: barHeight,
         left: xPos,
         top: yPos,
-        borderRadius: 8
+        borderRadius: 0
       });
       endStates.push({
         width: r,
         height: r,
         left: margin.left + x - r / 2,
         top: margin.top + y - r / 2,
-        borderRadius: r / 2
+        borderRadius: r
       });
     });
 
@@ -878,27 +955,18 @@ function barToScatterUltraSmoothTransition() {
       };
     });
 
-    // 动画插值
-    let duration = 900; // ms
-    let startTime = null;
-    function animate(now) {
-      if (!startTime) startTime = now;
-      let t = Math.min(1, (now - startTime) / duration);
-      // easeInOutCubic
-      t = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-      for (let i = 0; i < barDots.length; i++) {
-        let s = startStates[i], e = endStates[i], bar = barDots[i];
-        bar.style.width = (s.width + (e.width - s.width) * t) + "px";
-        bar.style.height = (s.height + (e.height - s.height) * t) + "px";
-        bar.style.left = (s.left + (e.left - s.left) * t) + "px";
-        bar.style.top = (s.top + (e.top - s.top) * t) + "px";
-        bar.style.borderRadius = (s.borderRadius + (e.borderRadius - s.borderRadius) * t) + "px";
-      }
-      if (t < 1) {
-        requestAnimationFrame(animate);
-      }
-    }
-    requestAnimationFrame(animate);
+      // Force reflow to ensure transitions work
+      void document.querySelector("#renderer").offsetHeight;
+
+      // Start the transition by setting the final state
+      barDots.forEach((bar, i) => {
+        const e = endStates[i];
+        bar.style.width = `${e.width}px`;
+        bar.style.height = `${e.height}px`;
+        bar.style.left = `${e.left}px`;
+        bar.style.top = `${e.top}px`;
+        bar.style.borderRadius = `${e.borderRadius}px`;
+      });
 
     // 标记已进入scatter
     barToScatterUltraSmoothTransition.hasEnteredScatter = true;
@@ -906,8 +974,8 @@ function barToScatterUltraSmoothTransition() {
   }
 
   // 已在scatter页面，切换字段时仅变大小
-  // 先移除旧的散点
-  document.querySelectorAll(".bar-to-dot").forEach(el => el.remove());
+  const existingDots = document.querySelectorAll(".bar-to-dot");
+  const needRedraw = existingDots.length === 0;
 
   // 重新绘制所有散点，带动画，仅变大小
   let dots = [];
@@ -937,8 +1005,10 @@ function barToScatterUltraSmoothTransition() {
     dot.style.width = `${prevR}px`;
     dot.style.height = `${prevR}px`;
     dot.style.cursor = "pointer";
+    dot.style.borderRadius = `50%`;
+    dot.style.transition = "width 0.6s cubic-bezier(0.4, 0, 0.2, 1), height 0.6s cubic-bezier(0.4, 0, 0.2, 1), left 0.6s cubic-bezier(0.4, 0, 0.2, 1), top 0.6s cubic-bezier(0.4, 0, 0.2, 1)";
     document.querySelector("#renderer").appendChild(dot);
-    dots.push({dot, x, y, prevR, r});
+    dots.push({ dot, x, y, prevR, r });
   });
 
   // 绑定交互
@@ -965,28 +1035,19 @@ function barToScatterUltraSmoothTransition() {
     };
   });
 
-  // 动画插值，仅变大小
-  let duration = 600;
-  let startTime = null;
-  function animateDotSize(now) {
-    if (!startTime) startTime = now;
-    let t = Math.min(1, (now - startTime) / duration);
-    t = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-    for (let i = 0; i < dots.length; i++) {
-      let {dot, x, y, prevR, r} = dots[i];
-      let curR = prevR + (r - prevR) * t;
-      dot.style.width = `${curR}px`;
-      dot.style.height = `${curR}px`;
-      dot.style.left = `${margin.left + x - curR / 2}px`;
-      dot.style.top = `${margin.top + y - curR / 2}px`;
-      dot.style.borderRadius = `${curR / 2}px`;
-    }
-    if (t < 1) {
-      requestAnimationFrame(animateDotSize);
-    }
-  }
-  requestAnimationFrame(animateDotSize);
+  // Force reflow to ensure transitions work
+  void document.querySelector("#renderer").offsetHeight;
 
-  // 记录当前字段，供下次切换用
-  barToScatterUltraSmoothTransition.prevRField = rField;
+  // Update sizes immediately after creating dots
+  dots.forEach(({ dot, x, y, r }) => {
+    dot.style.width = `${r}px`;
+    dot.style.height = `${r}px`;
+    dot.style.left = `${margin.left + x - r / 2}px`;
+    dot.style.top = `${margin.top + y - r / 2}px`;
+  });
+
+  // 确保记录之前的字段，供下次切换用
+  if (barToScatterUltraSmoothTransition.prevRField !== rField) {
+    barToScatterUltraSmoothTransition.prevRField = rField;
+  }
 }
