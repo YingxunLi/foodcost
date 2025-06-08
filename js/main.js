@@ -1,9 +1,10 @@
 let stageHeight;
 let stageWidth;
-const margin = { top: 120, right: 80, bottom: 100, left: 80 }; // Oberer Rand erhöht
+const margin = { top: 120, right: 80, bottom: 100, left: 80 }; 
 
+// ----------- Checkbox ----------- 
 const fields = [
-  { key: "Cost", label: "Cost" },
+  { key: "Cost", label: "Total Price" },
   { key: "Fruits", label: "Fruits" },
   { key: "Vegetables", label: "Vegetables" },
   { key: "Starchy Staples", label: "Starchy Staples" },
@@ -13,8 +14,9 @@ const fields = [
 ];
 let currentField = "Cost";
 
+// ----------- Option in der oberen rechten Ecke ----------- 
 const topFields = [
-  { key: "Cost", label: "Cost" },
+  { key: "Cost", label: "Total Price" },
   { key: "TagGNI", label: "Income" },
   { key: "Vergleich", label: "Ratio" }
 ];
@@ -27,52 +29,30 @@ function init() {
   stageWidth = renderer.clientWidth;
   stageHeight = renderer.clientHeight;
 
-  // ----------- Neuer oberer Bereich -----------
   let topArea = document.createElement("div");
   topArea.id = "top-area";
-  topArea.style.position = "absolute";
   topArea.style.left = `${margin.left}px`;
-  topArea.style.top = `30px`;
   topArea.style.width = `${stageWidth - margin.left - margin.right}px`;
-  topArea.style.height = "60px";
-  topArea.style.display = "flex";
-  topArea.style.justifyContent = "space-between";
-  topArea.style.alignItems = "center";
-  topArea.style.zIndex = "20";
-  topArea.style.pointerEvents = "auto";
 
-  // Titel
+  // ----------- Healthy Diet Cost-Button (Animation zurück) ----------- 
   let title = document.createElement("button");
   title.textContent = "Healthy Diet Cost";
   title.classList.add("top-btn", "main", "active");
 
-  title.addEventListener("mouseenter", () => {
-    if (!affordabilityBtn.classList.contains("active")) {
-      title.classList.add("active");
-      title.classList.remove("inactive");
-    }
-  });
-  title.addEventListener("mouseleave", () => {
-    if (affordabilityBtn.classList.contains("active")) {
-      title.classList.remove("active");
-      title.classList.add("inactive");
-    }
-  });
   title.addEventListener("click", () => {
-    // Reset scatter transition state
+    //am Anfang Bar diagramm rendern
     barToScatterUltraSmoothTransition.hasEnteredScatter = false;
     barToScatterUltraSmoothTransition.currentScatterField = "Vergleich";
     barToScatterUltraSmoothTransition.prevRField = "Vergleich";
     
-    // Remove scatter plot buttons if they exist
+    //Button rechts nicht doppelt erzeugen
     let scatterTop = document.getElementById("scatter-top-btns");
     if (scatterTop) scatterTop.remove();
     
-    // Show top field options again
+    //am Anfang nur cost aktivieren
     let topOptions = document.querySelector("#top-area > div:last-child");
     if (topOptions) {
       topOptions.style.display = "flex";
-      // Update top field buttons active state
       Array.from(topOptions.children).forEach((b, idx) => {
         if (topFields[idx].key === "Cost") {
           b.classList.add("active");
@@ -83,19 +63,16 @@ function init() {
     }
     
     // Reset active states
-    title.classList.add("active");
-    title.classList.remove("inactive");
-    affordabilityBtn.classList.remove("active");
-    affordabilityBtn.classList.add("inactive");
-    
-    // Reset current field to Cost
+    setActiveButton(title, affordabilityBtn);
+
+    // Reset current field to Cost ⚠️
     currentField = "Cost";
     currentTopField = "Cost";
 
-    // Get all current dots
+    // ob jetzt Scatterplot aktiv ist? falls ja, dann animiere zurück zu Balkendiagramm
     const dots = document.querySelectorAll(".bar-to-dot");
     if (dots.length > 0) {
-      // Create a sorted copy of jsonData
+      // Sortieren nach Größe
       const data = [...jsonData].sort((a, b) => parseFloat(b.TagGNI) - parseFloat(a.TagGNI));
       const chartWidth = stageWidth - margin.left - margin.right;
       const chartHeight = stageHeight - margin.top - margin.bottom;
@@ -127,42 +104,24 @@ function init() {
     }
   });
 
-  // Affordability-Button
+  // ----------- Affordability-Button ----------- 
   let affordabilityBtn = document.createElement("button");
   affordabilityBtn.textContent = "Affordability";
   affordabilityBtn.classList.add("top-btn", "main", "affordability", "inactive");
-  affordabilityBtn.addEventListener("mouseenter", () => {
-    if (!title.classList.contains("active")) {
-      affordabilityBtn.classList.add("active");
-      affordabilityBtn.classList.remove("inactive");
-    }
-  });
-  affordabilityBtn.addEventListener("mouseleave", () => {
-    if (title.classList.contains("active")) {
-      affordabilityBtn.classList.remove("active");
-      affordabilityBtn.classList.add("inactive");
-    }
-  });
+
   affordabilityBtn.addEventListener("click", () => {
     barToScatterUltraSmoothTransition();
-    affordabilityBtn.classList.add("active");
-    affordabilityBtn.classList.remove("inactive");
-    title.classList.remove("active");
-    title.classList.add("inactive");
+    setActiveButton(affordabilityBtn, title);
   });
 
+  // ----------- Container für zwei Buttons ⬆️ ----------- 
   let leftArea = document.createElement("div");
-  leftArea.style.display = "flex";
-  leftArea.style.alignItems = "center";
   leftArea.appendChild(title);
   leftArea.appendChild(affordabilityBtn);
-
   topArea.appendChild(leftArea);
 
-  // Rechte Optionen
+  // ----------- Rechte Optionen-Button ----------- 
   let topOptions = document.createElement("div");
-  topOptions.style.display = "flex";
-  topOptions.style.gap = "24px";
   topFields.forEach(f => {
     let btn = document.createElement("button");
     btn.textContent = f.label;
@@ -170,14 +129,7 @@ function init() {
     if (f.key === currentTopField) {
       btn.classList.add("active");
     }
-    btn.addEventListener("mouseenter", () => {
-      btn.classList.add("active");
-    });
-    btn.addEventListener("mouseleave", () => {
-      if (topFields.find(tf => tf.key === currentTopField).label !== btn.textContent) {
-        btn.classList.remove("active");
-      }
-    });
+
     btn.addEventListener("click", () => {
       // Vorheriges Feld merken
       const prevField = currentField;
@@ -222,6 +174,14 @@ function init() {
   drawCountryCostChart();
 }
 
+// ----------- Button verpacken ----------- 
+function setActiveButton(activeBtn, inactiveBtn) {
+  activeBtn.classList.add("active");
+  activeBtn.classList.remove("inactive");
+  inactiveBtn.classList.remove("active");
+  inactiveBtn.classList.add("inactive");
+}
+
 function renderCheckboxArea() {
   // Vorherigen Bereich entfernen (falls vorhanden)
   let oldArea = document.getElementById("checkbox-area");
@@ -230,13 +190,9 @@ function renderCheckboxArea() {
   const chartWidth = stageWidth - margin.left - margin.right;
   let checkboxArea = document.createElement("div");
   checkboxArea.id = "checkbox-area";
-  checkboxArea.style.position = "absolute";
   checkboxArea.style.left = `${margin.left}px`;
   checkboxArea.style.top = `${stageHeight - margin.bottom + 20}px`;
   checkboxArea.style.width = `${chartWidth}px`;
-  checkboxArea.style.zIndex = "10";
-  checkboxArea.style.display = "flex";
-  checkboxArea.style.justifyContent = "space-between";
 
   fields.forEach(f => {
     let label = document.createElement("label");

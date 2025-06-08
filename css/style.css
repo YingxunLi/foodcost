@@ -25,7 +25,97 @@ body {
     /* overflow: hidden; */
 }
 
-/* 柱状图主样式，所有柱状图的基础外观和动画 */
+/* ----------- Top Area -----------  */
+#top-area {
+    position: absolute;
+    top: 30px;
+    height: 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 20;
+    pointer-events: auto;
+}
+
+#top-area > div:last-child {
+    display: flex;
+    gap: 24px;
+}
+
+#top-area > div:first-child {
+    display: flex;
+    align-items: center;
+}
+
+/* ----------- Top Button (link & recht) -----------  */
+.top-btn {
+    font-size: 15px;
+    padding: 6px 18px;
+    border: none;
+    border-radius: 18px;
+    background: #E1E5E8;
+    color: #6B7C8D;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    font-weight: normal;
+    outline: none;
+}
+
+.top-btn.inactive {
+    color: #E1E5E8;
+    font-weight: normal;
+}
+
+.top-btn.active {
+    background: #FD96B3;
+    color: #FFFFFF;
+}
+
+.top-btn:hover {
+    background: #FED5E1;
+    color: #fff;
+}
+
+.top-btn.main,
+.top-btn.affordability{
+    font-size: 20px;
+    padding: 4px 0px;
+    margin-left: 0px;
+    background: #FFFFFF;
+    color: #6B7C8D;
+    font-weight: bold;
+    transition: background 0.2s, color 0.2s;
+}
+
+.top-btn.main {
+    margin-left: 0px;
+    font-weight: bold;
+}
+.top-btn.affordability {
+    margin-left: 30px;
+    font-weight: bold;
+}
+
+.top-btn.main.inactive,
+.top-btn.affordability.inactive {
+    background: #ffffff;
+    color: #E1E5E8;
+}
+
+.top-btn.main:active,
+.top-btn.affordability:active {
+    background: #ffffff;
+    color: #6B7C8D;
+}
+
+.top-btn.main:hover,
+.top-btn.affordability:hover {
+    background: #ffffff !important;
+    color: #6B7C8D;
+    font-weight: bold;
+}
+
+/* ----------- bar -----------  */
 .bar {
     position: absolute;
     transition: height 0.3s ease, background-color 0.3s ease;
@@ -35,57 +125,48 @@ body {
     z-index: 1;
 }
 
-/* 收入柱状图（灰色，半透明，底层） */
 .bar.income {
     background-color: #E1E5E8;
     opacity: 0.5;
     z-index: 1;
 }
 
-/* 成本柱状图（粉色，顶层） */
 .bar.cost {
     background-color: #FED5E1;
     opacity: 1;
     z-index: 2;
 }
 
-/* 鼠标悬停/激活时的高亮效果 */
 .bar.active {
-    /* 可根据类型再细分 */
     background-color: #FD96B3 !important;
     stroke: #FD96B3;
     stroke-width: 10px;
 }
 
-/* 收入柱状图高亮时的特殊色 */
 .bar.income.active {
     background-color: #6B7C8D !important;
     stroke: #6B7C8D;
     stroke-width: 10px;
 }
 
-/* 辅助类：比值背景柱（灰色，100%高度） */
 .bar.ratio-bg {
     background-color: #E1E5E8;
     opacity: 0.5;
     z-index: 1;
 }
 
-/* 辅助类：比值前景柱（粉色，实际比值高度） */
 .bar.ratio-fg {
     background-color: #FED5E1;
     opacity: 1;
     z-index: 2;
 }
 
-/* 辅助类：成本背景柱（灰色，半透明，底层） */
 .bar.cost-background {
     background-color: #E1E5E8;
     opacity: 0.5;
     z-index: 1;
 }
 
-/* 辅助类：bar-to-dot 动画用，初始为粉色半透明，动画后变圆点 */
 .bar.bar-to-dot {
     background-color: #FD96B3;
     opacity: 0.4;
@@ -93,11 +174,11 @@ body {
     z-index: 2;
     transition: all 0.5s cubic-bezier(.4,0,.2,1);
 }
+
 .bar.bar-to-dot:hover {
     opacity: 1;
     background-color: #FD96B3;
 }
-
 
 .tooltip {
     position: absolute;
@@ -112,8 +193,10 @@ body {
     white-space: nowrap;
 }
 
-
+/* ----------- Checkbox -----------  */
 #checkbox-area {
+    position: absolute;
+    z-index: 10;
     user-select: none;
     display: flex;
     flex-direction: row;
@@ -156,65 +239,4 @@ body {
 
 #checkbox-area label input[type="radio"]:checked + span::before {
     background: #FD96B3;
-}
-
-/* 顶部按钮统一样式 */
-.top-btn {
-    font-size: 15px;
-    padding: 6px 18px;
-    border: none;
-    border-radius: 18px;
-    background: #E1E5E8;
-    color: #6B7C8D;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
-    font-weight: normal;
-    outline: none;
-}
-.top-btn.active {
-    background: #FD96B3;
-    color: #FFFFFF;
-}
-.top-btn:hover {
-    background: #FED5E1;
-    color: #fff;
-}
-
-/* 主标题按钮和 Affordability 按钮样式（统一基础，区分 margin） */
-.top-btn.main {
-    font-size: 20px;
-    padding: 4px 0px;
-    margin-left: 0px;
-    background: #FFFFFF;
-    color: #6B7C8D;
-    font-weight: bold;
-    border-radius: 18px;
-    transition: background 0.2s, color 0.2s;
-}
-.top-btn.affordability {
-    font-size: 20px;
-    padding: 4px 0px;
-    margin-left: 30px;
-    background: #FFFFFF;
-    color: #6B7C8D;
-    /* font-weight: bold; */
-    border-radius: 18px;
-    transition: background 0.2s, color 0.2s;
-}
-.top-btn.main.active,
-.top-btn.affordability.active {
-    color: #6B7C8D;
-    background: #FFFFFF;
-    /* font-weight: bold; */
-}
-.top-btn.main.inactive,
-.top-btn.affordability.inactive {
-    color: #E1E5E8;
-    font-weight: normal;
-}
-.top-btn.main:hover,
-.top-btn.affordability:hover {
-    color: #6B7C8D;
-    background: #FFFFFF;
-    /* font-weight: bold; */
 }
