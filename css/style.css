@@ -92,7 +92,11 @@ body {
     font-weight: bold;
 }
 .top-btn.affordability {
-    margin-left: 30px;
+    margin-left: 60px;
+    font-weight: bold;
+}
+.top-btn.overview {
+    margin-left: 60px;
     font-weight: bold;
 }
 
@@ -239,4 +243,28 @@ body {
 
 #checkbox-area label input[type="radio"]:checked + span::before {
     background: #FD96B3;
+}
+
+/* ----------- overview Kreise -----------  */
+.overview-circle {
+    position: absolute;
+    border-radius: 50%;
+    background: #FED5E1;
+    opacity: 0.85;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+}
+.overview-circle-income {
+    position: absolute;
+    border-radius: 50%;
+    background: #B5D8F6;
+    opacity: 0.7;
+    pointer-events: none;
+}
+.overview-circle-unter {
+    position: absolute;
+    border-radius: 50%;
+    background: #FFD580;
+    opacity: 0.7;
+    pointer-events: none;
 }

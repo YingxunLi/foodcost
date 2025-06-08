@@ -4,7 +4,7 @@ const margin = { top: 120, right: 80, bottom: 100, left: 80 };
 
 // ----------- Checkbox ----------- 
 const fields = [
-  { key: "Cost", label: "Total Price" },
+  { key: "Cost", label: "Total Cost" },
   { key: "Fruits", label: "Fruits" },
   { key: "Vegetables", label: "Vegetables" },
   { key: "Starchy Staples", label: "Starchy Staples" },
@@ -16,7 +16,7 @@ let currentField = "Cost";
 
 // ----------- Option in der oberen rechten Ecke ----------- 
 const topFields = [
-  { key: "Cost", label: "Total Price" },
+  { key: "Cost", label: "Cost" },
   { key: "TagGNI", label: "Income" },
   { key: "Vergleich", label: "Ratio" }
 ];
@@ -63,7 +63,7 @@ function init() {
     }
     
     // Reset active states
-    setActiveButton(title, affordabilityBtn);
+    setActiveButton(title, affordabilityBtn, overviewBtn);
 
     // Reset current field to Cost ⚠️
     currentField = "Cost";
@@ -111,13 +111,24 @@ function init() {
 
   affordabilityBtn.addEventListener("click", () => {
     barToScatterUltraSmoothTransition();
-    setActiveButton(affordabilityBtn, title);
+    setActiveButton(affordabilityBtn, title, overviewBtn);
   });
 
-  // ----------- Container für zwei Buttons ⬆️ ----------- 
+  // ----------- Overview-Button ----------- 
+  let overviewBtn = document.createElement("button");
+  overviewBtn.textContent = "Overview";
+  overviewBtn.classList.add("top-btn", "main", "overview", "inactive");
+  
+  overviewBtn.addEventListener("click", () => {
+    setActiveButton(overviewBtn, title, affordabilityBtn);
+    drawOverviewChart();
+  });
+
+  // ----------- Container für drei Buttons ⬆️ ----------- 
   let leftArea = document.createElement("div");
   leftArea.appendChild(title);
   leftArea.appendChild(affordabilityBtn);
+  leftArea.appendChild(overviewBtn);
   topArea.appendChild(leftArea);
 
   // ----------- Rechte Optionen-Button ----------- 
@@ -175,11 +186,13 @@ function init() {
 }
 
 // ----------- Button verpacken ----------- 
-function setActiveButton(activeBtn, inactiveBtn) {
+function setActiveButton(activeBtn, ...inactiveBtns) {
   activeBtn.classList.add("active");
   activeBtn.classList.remove("inactive");
-  inactiveBtn.classList.remove("active");
-  inactiveBtn.classList.add("inactive");
+  inactiveBtns.forEach(btn => {
+    btn.classList.remove("active");
+    btn.classList.add("inactive");
+  });
 }
 
 function renderCheckboxArea() {
@@ -1007,3 +1020,203 @@ function barToScatterUltraSmoothTransition() {
     barToScatterUltraSmoothTransition.prevRField = rField;
   }
 }
+
+
+// ----------- Overview Chart ----------- 
+function drawOverviewChart() {
+  document.querySelector("#renderer").innerHTML = "";
+  let oldArea = document.getElementById("checkbox-area");
+  if (oldArea) oldArea.remove();
+
+  const data = [...jsonData].sort((a, b) => parseFloat(b.TagGNI) - parseFloat(a.TagGNI));
+  const chartWidth = stageWidth - margin.left - margin.right;
+  const chartHeight = stageHeight - margin.top - margin.bottom;
+
+  // 计算圆半径
+  const minCost = Math.min(...data.map(d => parseFloat(d["Cost"])));
+  const maxCost = Math.max(...data.map(d => parseFloat(d["Cost"])));
+  const minIncome = Math.min(...data.map(d => parseFloat(d["TagGNI"])));
+  const maxIncome = Math.max(...data.map(d => parseFloat(d["TagGNI"])));
+  const minUnter = Math.min(...data.map(d => parseFloat(d["Unterernährung"])));
+  const maxUnter = Math.max(...data.map(d => parseFloat(d["Unterernährung"])));
+
+  // 生成初始节点
+  const nodes = data.map((country, i) => {
+    const cost = parseFloat(country["Cost"]);
+    const income = parseFloat(country["TagGNI"]);
+    const unter = parseFloat(country["Unterernährung"]);
+    return {
+      country,
+      rCost: gmynd.map(cost, minCost, maxCost, 40, 120),
+      rIncome: gmynd.map(income, minIncome, maxIncome, 80, 200),
+      rUnter: gmynd.map(unter, minUnter, maxUnter, 10, 80),
+      x: margin.left + Math.random() * chartWidth,
+      y: margin.top + Math.random() * chartHeight
+    };
+  });
+
+  // 简单力导向模拟，避免重叠
+  function simulate(nodes, iterations = 200) {
+    for (let iter = 0; iter < iterations; iter++) {
+      for (let i = 0; i < nodes.length; i++) {
+        let n1 = nodes[i];
+        for (let j = i + 1; j < nodes.length; j++) {
+          let n2 = nodes[j];
+          let dx = n2.x - n1.x;
+          let dy = n2.y - n1.y;
+          let dist = Math.sqrt(dx * dx + dy * dy);
+          let minDist = (n1.rCost + n2.rCost) / 2; // 允许有一点点重叠，让圆更分散：把 + 4 改大，比如 + 12
+          if (dist < minDist && dist > 0) {
+            let move = (minDist - dist) / 2;
+            let mx = (dx / dist) * move;
+            let my = (dy / dist) * move;
+            n1.x -= mx;
+            n1.y -= my;
+            n2.x += mx;
+            n2.y += my;
+          }
+        }
+        // 限制在画布内
+        n1.x = Math.max(margin.left + n1.rCost / 2, Math.min(margin.left + chartWidth - n1.rCost / 2, n1.x));
+        n1.y = Math.max(margin.top + n1.rCost / 2, Math.min(margin.top + chartHeight - n1.rCost / 2, n1.y));
+      }
+    }
+  }
+  simulate(nodes, 30);//更分散/更稳定：把 180 改大，比如 300 或 500
+
+  // tooltip
+  let tooltip = document.createElement("div");
+  tooltip.classList.add("tooltip");
+  document.body.appendChild(tooltip);
+
+ // ...existing code...
+
+// 渲染圆
+nodes.forEach(n => {
+  // 判断半径大小
+  const incomeBigger = n.rIncome > n.rCost;
+
+  // income大于cost
+  if (incomeBigger) {
+    // income圆（底层，绿色填充）
+    let circleIncome = document.createElement("div");
+    circleIncome.classList.add("overview-circle-income");
+    circleIncome.style.left = `${n.x - n.rIncome / 2}px`;
+    circleIncome.style.top = `${n.y - n.rIncome / 2}px`;
+    circleIncome.style.width = `${n.rIncome}px`;
+    circleIncome.style.height = `${n.rIncome}px`;
+    circleIncome.style.background = "#02947B";
+    circleIncome.style.position = "absolute";
+    circleIncome.style.borderRadius = "50%";
+    circleIncome.style.zIndex = 1;
+
+    // cost圆（中层，白色填充）
+    let circleCost = document.createElement("div");
+    circleCost.classList.add("overview-circle");
+    circleCost.style.left = `${n.x - n.rCost / 2}px`;
+    circleCost.style.top = `${n.y - n.rCost / 2}px`;
+    circleCost.style.width = `${n.rCost}px`;
+    circleCost.style.height = `${n.rCost}px`;
+    circleCost.style.background = "#fff";
+    circleCost.style.position = "absolute";
+    circleCost.style.borderRadius = "50%";
+    circleCost.style.zIndex = 2;
+
+    // unterernährung圆（顶层，粉色描边，无填充）
+    let circleUnter = document.createElement("div");
+    circleUnter.classList.add("overview-circle-unter");
+    circleUnter.style.left = `${n.x - n.rUnter / 2}px`;
+    circleUnter.style.top = `${n.y - n.rUnter / 2}px`;
+    circleUnter.style.width = `${n.rUnter}px`;
+    circleUnter.style.height = `${n.rUnter}px`;
+    circleUnter.style.background = "transparent";
+    circleUnter.style.border = "4px solid #FD96B3";
+    circleUnter.style.position = "absolute";
+    circleUnter.style.borderRadius = "50%";
+    circleUnter.style.zIndex = 3;
+
+    // 交互只在cost圆
+    circleCost.addEventListener('mouseenter', () => {
+      circleCost.style.boxShadow = "0 0 0 4px #FD96B3";
+      tooltip.innerText =
+        `${n.country["Country Name"]}\nIncome: $${n.country["TagGNI"]}\nCost: $${n.country["Cost"]}\nMalnutrition: ${n.country["Unterernährung"]}%`;
+      tooltip.style.display = "block";
+      tooltip.style.left = `${circleCost.getBoundingClientRect().right + 10}px`;
+      tooltip.style.top = `${circleCost.getBoundingClientRect().top}px`;
+    });
+    circleCost.addEventListener('mousemove', () => {
+      tooltip.style.left = `${circleCost.getBoundingClientRect().right + 10}px`;
+      tooltip.style.top = `${circleCost.getBoundingClientRect().top}px`;
+    });
+    circleCost.addEventListener('mouseleave', () => {
+      circleCost.style.boxShadow = "";
+      tooltip.style.display = "none";
+    });
+
+    document.querySelector("#renderer").appendChild(circleIncome);
+    document.querySelector("#renderer").appendChild(circleCost);
+    document.querySelector("#renderer").appendChild(circleUnter);
+  } else {
+    // cost圆（底层，粉色填充）
+    let circleCost = document.createElement("div");
+    circleCost.classList.add("overview-circle");
+    circleCost.style.left = `${n.x - n.rCost / 2}px`;
+    circleCost.style.top = `${n.y - n.rCost / 2}px`;
+    circleCost.style.width = `${n.rCost}px`;
+    circleCost.style.height = `${n.rCost}px`;
+    circleCost.style.background = "#FED5E1";
+    circleCost.style.position = "absolute";
+    circleCost.style.borderRadius = "50%";
+    circleCost.style.zIndex = 1;
+
+    // income圆（中层，白色填充）
+    let circleIncome = document.createElement("div");
+    circleIncome.classList.add("overview-circle-income");
+    circleIncome.style.left = `${n.x - n.rIncome / 2}px`;
+    circleIncome.style.top = `${n.y - n.rIncome / 2}px`;
+    circleIncome.style.width = `${n.rIncome}px`;
+    circleIncome.style.height = `${n.rIncome}px`;
+    circleIncome.style.background = "#fff";
+    circleIncome.style.position = "absolute";
+    circleIncome.style.borderRadius = "50%";
+    circleIncome.style.zIndex = 2;
+
+    // unterernährung圆（顶层，粉色描边，无填充）
+    let circleUnter = document.createElement("div");
+    circleUnter.classList.add("overview-circle-unter");
+    circleUnter.style.left = `${n.x - n.rUnter / 2}px`;
+    circleUnter.style.top = `${n.y - n.rUnter / 2}px`;
+    circleUnter.style.width = `${n.rUnter}px`;
+    circleUnter.style.height = `${n.rUnter}px`;
+    circleUnter.style.background = "transparent";
+    circleUnter.style.border = "4px solid #FD96B3";
+    circleUnter.style.position = "absolute";
+    circleUnter.style.borderRadius = "50%";
+    circleUnter.style.zIndex = 3;
+
+    // 交互只在income圆
+    circleIncome.addEventListener('mouseenter', () => {
+      circleIncome.style.boxShadow = "0 0 0 4px #FD96B3";
+      tooltip.innerText =
+        `${n.country["Country Name"]}\nIncome: $${n.country["TagGNI"]}\nCost: $${n.country["Cost"]}\nMalnutrition: ${n.country["Unterernährung"]}%`;
+      tooltip.style.display = "block";
+      tooltip.style.left = `${circleIncome.getBoundingClientRect().right + 10}px`;
+      tooltip.style.top = `${circleIncome.getBoundingClientRect().top}px`;
+    });
+    circleIncome.addEventListener('mousemove', () => {
+      tooltip.style.left = `${circleIncome.getBoundingClientRect().right + 10}px`;
+      tooltip.style.top = `${circleIncome.getBoundingClientRect().top}px`;
+    });
+    circleIncome.addEventListener('mouseleave', () => {
+      circleIncome.style.boxShadow = "";
+      tooltip.style.display = "none";
+    });
+
+    document.querySelector("#renderer").appendChild(circleCost);
+    document.querySelector("#renderer").appendChild(circleIncome);
+    document.querySelector("#renderer").appendChild(circleUnter);
+  }
+});
+// ...existing code...
+}
+
