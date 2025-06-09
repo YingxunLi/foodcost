@@ -1046,44 +1046,39 @@ function drawOverviewChart() {
   const minUnter = Math.min(...data.map(d => parseFloat(d["Unterernährung"])));
   const maxUnter = Math.max(...data.map(d => parseFloat(d["Unterernährung"])));
 
-  const minCostArea = Math.PI * 50 * 50;
-  const maxCostArea = Math.PI * 160 * 160;
-  const minIncomeArea = Math.PI * 80 * 80;
-  const maxIncomeArea = Math.PI * 200 * 200;
+  const minCostArea = Math.PI * 55 * 55;
+  const maxCostArea = Math.PI * 170 * 170;
+  const minIncomeArea = Math.PI * 84 * 84;
+  const maxIncomeArea = Math.PI * 205 * 205;
   const minUnterArea = Math.PI * 10 * 10;
-  const maxUnterArea = Math.PI * 30 * 30;
+  const maxUnterArea = Math.PI * 45 * 45;
 
   // Position
   const nodes = data.map((country, i) => {
     const cost = parseFloat(country.Cost);
     const income = parseFloat(country.TagGNI);
     const unter = parseFloat(country.Unterernährung);
-    const ratio = parseFloat(country.Vergleich);
 
-    // original radius calculation
-    let rCost = Math.sqrt(gmynd.map(cost, minCost, maxCost, minCostArea, maxCostArea) / Math.PI);
-    let rIncome = Math.sqrt(gmynd.map(income, minIncome, maxIncome, minIncomeArea, maxIncomeArea) / Math.PI);
-    let rUnter = Math.sqrt(gmynd.map(unter, minUnter, maxUnter, minUnterArea, maxUnterArea) / Math.PI);
-
-    // garantieren, dass der Bodenkreis größer ist
-    if (ratio > 50 && rCost <= rIncome) {
-      [rCost, rIncome] = [Math.max(rCost, rIncome + 8), Math.min(rCost - 8, rIncome)];
-    } else if (ratio < 50 && rIncome <= rCost) {
-      [rIncome, rCost] = [Math.max(rIncome, rCost + 8), Math.min(rIncome - 8, rCost)];
-    } // 8 kann verändert werden, um den Abstand zu erhöhen
-
-    // X  Y Achse
+    // X Achse1
     const xBase = gmynd.map(income, minIncome, maxIncome, margin.left, margin.left + chartWidth);
-    const x = xBase + (Math.random() - 0.5) * 10; //40 kann verandert werden, um die Streuung zu erhöhen
+    const x = xBase + (Math.random() - 0.5) * 40; //40 kann verandert werden, um die Streuung zu erhöhen
+
+    // Y Achse
     const y = margin.top + Math.random() * chartHeight;
 
     return {
       country,
-      rCost,
-      rIncome,
-      rUnter,
+      // rCost: gmynd.map(cost, minCost, maxCost, 50, 160),
+      // rIncome: gmynd.map(income, minIncome, maxIncome, 80, 200),
+      // rUnter: gmynd.map(unter, minUnter, maxUnter, 10, 30),
+      rCost: Math.sqrt(gmynd.map(cost, minCost, maxCost, minCostArea, maxCostArea) / Math.PI),
+      rIncome: Math.sqrt(gmynd.map(income, minIncome, maxIncome, minIncomeArea, maxIncomeArea) / Math.PI),
+      rUnter: Math.sqrt(gmynd.map(unter, minUnter, maxUnter, minUnterArea, maxUnterArea) / Math.PI),
       x,
       y
+      //falls random:
+      //x: margin.left + Math.random() * chartWidth,
+      //y: margin.top + Math.random() * chartHeight
     };
   });
 
@@ -1194,7 +1189,6 @@ function drawOverviewChart() {
     document.querySelector("#renderer").appendChild(group);
   });
 }
-
 
 
 
