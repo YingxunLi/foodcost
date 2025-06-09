@@ -246,25 +246,29 @@ body {
 }
 
 /* ----------- overview Kreise -----------  */
-.overview-circle {
+.overview-circle-green {
     position: absolute;
     border-radius: 50%;
-    background: #FED5E1;
-    opacity: 0.85;
-    cursor: pointer;
-    transition: box-shadow 0.2s;
+    background: #02947B;
+    opacity: 0.5;
+    pointer-events: none;
 }
-.overview-circle-income {
+.overview-circle-pink {
     position: absolute;
     border-radius: 50%;
-    background: #B5D8F6;
-    opacity: 0.7;
+    background: #FD96B3;
+    opacity: 0.4;
+    pointer-events: none;
+}
+.overview-circle-white {
+    position: absolute;
+    border-radius: 50%;
+    background: #FFFFFF;
     pointer-events: none;
 }
 .overview-circle-unter {
     position: absolute;
     border-radius: 50%;
-    background: #FFD580;
-    opacity: 0.7;
+    background: #FD96B3;
     pointer-events: none;
 }
