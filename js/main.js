@@ -1058,12 +1058,26 @@ function drawOverviewChart() {
     const cost = parseFloat(country.Cost);
     const income = parseFloat(country.TagGNI);
     const unter = parseFloat(country.Unterernährung);
+    const ratio = parseFloat(country.Vergleich);
 
-    // X Achse1
+    // original radius calculation
+    let rCost = Math.sqrt(gmynd.map(cost, minCost, maxCost, minCostArea, maxCostArea) / Math.PI);
+    let rIncome = Math.sqrt(gmynd.map(income, minIncome, maxIncome, minIncomeArea, maxIncomeArea) / Math.PI);
+    let rUnter = Math.sqrt(gmynd.map(unter, minUnter, maxUnter, minUnterArea, maxUnterArea) / Math.PI);
+
+      // 保证大圆一定大
+    if (ratio > 50 && rCost <= rIncome) {
+    // cost 圆必须大于 income 圆
+      [rCost, rIncome] = [Math.max(rCost, rIncome + 8), Math.min(rCost - 8, rIncome)];
+    } else if (ratio < 50 && rIncome <= rCost) {
+    // income 圆必须大于 cost 圆
+      [rIncome, rCost] = [Math.max(rIncome, rCost + 8), Math.min(rIncome - 8, rCost)];
+    }
+      // 8 可调整为你想要的最小差距
+
+    // X  Y Achse
     const xBase = gmynd.map(income, minIncome, maxIncome, margin.left, margin.left + chartWidth);
-    const x = xBase + (Math.random() - 0.5) * 40; //40 kann verandert werden, um die Streuung zu erhöhen
-
-    // Y Achse
+    const x = xBase + (Math.random() - 0.5) * 10; //40 kann verandert werden, um die Streuung zu erhöhen
     const y = margin.top + Math.random() * chartHeight;
 
     return {
@@ -1071,9 +1085,13 @@ function drawOverviewChart() {
       // rCost: gmynd.map(cost, minCost, maxCost, 50, 160),
       // rIncome: gmynd.map(income, minIncome, maxIncome, 80, 200),
       // rUnter: gmynd.map(unter, minUnter, maxUnter, 10, 30),
-      rCost: Math.sqrt(gmynd.map(cost, minCost, maxCost, minCostArea, maxCostArea) / Math.PI),
-      rIncome: Math.sqrt(gmynd.map(income, minIncome, maxIncome, minIncomeArea, maxIncomeArea) / Math.PI),
-      rUnter: Math.sqrt(gmynd.map(unter, minUnter, maxUnter, minUnterArea, maxUnterArea) / Math.PI),
+
+      // rCost: Math.sqrt(gmynd.map(cost, minCost, maxCost, minCostArea, maxCostArea) / Math.PI),
+      // rIncome: Math.sqrt(gmynd.map(income, minIncome, maxIncome, minIncomeArea, maxIncomeArea) / Math.PI),
+      // rUnter: Math.sqrt(gmynd.map(unter, minUnter, maxUnter, minUnterArea, maxUnterArea) / Math.PI),
+      rCost,
+      rIncome,
+      rUnter,
       x,
       y
       //falls random:
