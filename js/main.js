@@ -1046,6 +1046,13 @@ function drawOverviewChart() {
   const minUnter = Math.min(...data.map(d => parseFloat(d["Unterernährung"])));
   const maxUnter = Math.max(...data.map(d => parseFloat(d["Unterernährung"])));
 
+  const minCostArea = Math.PI * 50 * 50;
+  const maxCostArea = Math.PI * 160 * 160;
+  const minIncomeArea = Math.PI * 80 * 80;
+  const maxIncomeArea = Math.PI * 200 * 200;
+  const minUnterArea = Math.PI * 10 * 10;
+  const maxUnterArea = Math.PI * 30 * 30;
+
   // Position
   const nodes = data.map((country, i) => {
     const cost = parseFloat(country.Cost);
@@ -1061,9 +1068,12 @@ function drawOverviewChart() {
 
     return {
       country,
-      rCost: gmynd.map(cost, minCost, maxCost, 50, 160),
-      rIncome: gmynd.map(income, minIncome, maxIncome, 80, 200),
-      rUnter: gmynd.map(unter, minUnter, maxUnter, 10, 30),
+      // rCost: gmynd.map(cost, minCost, maxCost, 50, 160),
+      // rIncome: gmynd.map(income, minIncome, maxIncome, 80, 200),
+      // rUnter: gmynd.map(unter, minUnter, maxUnter, 10, 30),
+      rCost: Math.sqrt(gmynd.map(cost, minCost, maxCost, minCostArea, maxCostArea) / Math.PI),
+      rIncome: Math.sqrt(gmynd.map(income, minIncome, maxIncome, minIncomeArea, maxIncomeArea) / Math.PI),
+      rUnter: Math.sqrt(gmynd.map(unter, minUnter, maxUnter, minUnterArea, maxUnterArea) / Math.PI),
       x,
       y
       //falls random:
