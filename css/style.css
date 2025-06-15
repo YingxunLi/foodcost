@@ -122,11 +122,14 @@ body {
 /* ----------- bar -----------  */
 .bar {
     position: absolute;
-    transition: height 0.3s ease, background-color 0.3s ease;
+    transition:
+        height 0.3s ease,
+        background-color 0.3s cubic-bezier(.4,0,.2,1);
     border-radius: 8px;
     opacity: 1;
     background-color: #FED5E1;
     z-index: 1;
+    border: 0 solid transparent;
 }
 
 .bar.income {
@@ -143,14 +146,10 @@ body {
 
 .bar.active {
     background-color: #FD96B3 !important;
-    stroke: #FD96B3;
-    stroke-width: 10px;
 }
 
 .bar.income.active {
     background-color: #6B7C8D !important;
-    stroke: #6B7C8D;
-    stroke-width: 10px;
 }
 
 .bar.ratio-bg {
@@ -171,18 +170,23 @@ body {
     z-index: 1;
 }
 
+/* ----------- dot -----------  */
 .bar.bar-to-dot {
     background-color: #FD96B3;
     opacity: 0.4;
-    border-radius: 8px;
+    border-radius: 50%;
     z-index: 2;
     transition: all 0.5s cubic-bezier(.4,0,.2,1);
 }
 
+.bar.bar-to-dot.active,
 .bar.bar-to-dot:hover {
     opacity: 1;
     background-color: #FD96B3;
+    transform: scale(1.5);
 }
+
+
 
 .tooltip {
     position: absolute;
