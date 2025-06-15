@@ -711,41 +711,43 @@ function drawCountryCostChart(transitionMode) {
   });
 }
 
+// ----------- Affordability ----------- 
 function barToScatterUltraSmoothTransition() {
-
+  // richtopOptions entfernen
   let topOptions = document.querySelector("#top-area > div:last-child");
   if (topOptions) topOptions.style.display = "none";
 
+  // checkbox entfernen
   document.querySelector("#renderer").innerHTML = "";
   let oldArea = document.getElementById("checkbox-area");
   if (oldArea) oldArea.remove();
 
-  // ----------- 新增：右上角切换按钮 -----------
+  // neue buttons erstellen
   const scatterFields = [
     { key: "Vergleich", label: "Ratio" },
     { key: "Percent cannot afford", label: "Unaffordability" },
     { key: "Unterernährung", label: "Malnutrition" }
   ];
-  // 保持切换状态
+
+  // protection
   if (!barToScatterUltraSmoothTransition.currentScatterField) {
     barToScatterUltraSmoothTransition.currentScatterField = "Vergleich";
-    // Initialize prevRField with the default field
     barToScatterUltraSmoothTransition.prevRField = "Vergleich";
   }
   let currentScatterField = barToScatterUltraSmoothTransition.currentScatterField;
 
-  // 标记是否已进入scatter页面
   if (typeof barToScatterUltraSmoothTransition.hasEnteredScatter === "undefined") {
     barToScatterUltraSmoothTransition.hasEnteredScatter = false;
   }
 
-  // 按钮区域
+  // scatter top area erstellen
   let scatterTop = document.createElement("div");
   scatterTop.style.display = "flex";
   scatterTop.style.gap = "18px";
   scatterTop.style.zIndex = "30";
   scatterTop.id = "scatter-top-btns";
 
+  // drei Schaltflächen erstellen
   scatterFields.forEach(f => {
     let btn = document.createElement("button");
     btn.textContent = f.label;
@@ -755,12 +757,10 @@ function barToScatterUltraSmoothTransition() {
     btn.addEventListener("mouseleave", () => {
       if (barToScatterUltraSmoothTransition.currentScatterField !== f.key) btn.classList.remove("active");
     });
+
     btn.addEventListener("click", () => {
-      // Save the current field before updating to the new one
       barToScatterUltraSmoothTransition.prevRField = barToScatterUltraSmoothTransition.currentScatterField;
       barToScatterUltraSmoothTransition.currentScatterField = f.key;
-      
-      // 刷新按钮激活状态
       Array.from(scatterTop.children).forEach((b, idx) => {
         if (scatterFields[idx].key === f.key) {
           b.classList.add("active");
@@ -768,73 +768,85 @@ function barToScatterUltraSmoothTransition() {
           b.classList.remove("active");
         }
       });
-      // 确保已进入scatter模式，这样切换时会执行动画
       barToScatterUltraSmoothTransition.hasEnteredScatter = true;
       barToScatterUltraSmoothTransition();
     });
     scatterTop.appendChild(btn);
   });
-  // 先移除旧的
+
+  // old area entfernen
   let oldScatterTop = document.getElementById("scatter-top-btns");
   if (oldScatterTop) oldScatterTop.remove();
   document.querySelector("#top-area").appendChild(scatterTop);
 
+  // Daten vorbereiten
   const data = [...jsonData].sort((a, b) => parseFloat(b.TagGNI) - parseFloat(a.TagGNI));
   const chartWidth = stageWidth - margin.left - margin.right;
   const chartHeight = stageHeight - margin.top - margin.bottom;
   const gap = 6;
   const barWidth = (chartWidth - gap * (data.length - 1)) / data.length;
 
+  // X / Y 
   const minX = Math.min(...data.map(d => parseFloat(d["TagGNI"])));
   const maxX = Math.max(...data.map(d => parseFloat(d["TagGNI"])));
   const minY = Math.min(...data.map(d => parseFloat(d["Cost"])));
   const maxY = Math.max(...data.map(d => parseFloat(d["Cost"])));
 
-  // 新增：根据当前按钮选择的字段决定散点大小
+  // min / max
   const rField = barToScatterUltraSmoothTransition.currentScatterField || "Vergleich";
   const minR = Math.min(...data.map(d => parseFloat(d[rField])));
   const maxR = Math.max(...data.map(d => parseFloat(d[rField])));
 
-  // Achsen zeichnen
-  let axisX = document.createElement("div");
-  axisX.style.position = "absolute";
-  axisX.style.left = `${margin.left}px`;
-  axisX.style.top = `${margin.top + chartHeight}px`;
-  axisX.style.width = `${chartWidth}px`;
-  axisX.style.height = "1px";
-  axisX.style.background = "#bbb";
-  document.querySelector("#renderer").appendChild(axisX);
+  // 绘制X轴
+let axisX = document.createElement("div");
+axisX.style.position = "absolute";
+axisX.style.left = `${margin.left}px`;
+axisX.style.top = `${margin.top + chartHeight}px`;
+axisX.style.width = `${chartWidth}px`;
+axisX.style.height = "1px";
+axisX.style.background = "#bbb";
+axisX.style.display = "none"; // 初始隐藏
+axisX.id = "axis-x";
+document.querySelector("#renderer").appendChild(axisX);
 
-  let axisY = document.createElement("div");
-  axisY.style.position = "absolute";
-  axisY.style.left = `${margin.left}px`;
-  axisY.style.top = `${margin.top}px`;
-  axisY.style.width = "1px";
-  axisY.style.height = `${chartHeight}px`;
-  axisY.style.background = "#bbb";
-  document.querySelector("#renderer").appendChild(axisY);
+// 绘制Y轴
+let axisY = document.createElement("div");
+axisY.style.position = "absolute";
+axisY.style.left = `${margin.left}px`;
+axisY.style.top = `${margin.top}px`;
+axisY.style.width = "1px";
+axisY.style.height = `${chartHeight}px`;
+axisY.style.background = "#bbb";
+axisY.style.display = "none"; // 初始隐藏
+axisY.id = "axis-y";
+document.querySelector("#renderer").appendChild(axisY);
 
-  // X-Achsen-Beschriftung
-  let xlabel = document.createElement("div");
-  xlabel.textContent = "Income (TagGNI)";
-  xlabel.style.position = "absolute";
-  xlabel.style.left = `${margin.left + chartWidth / 2 - 40}px`;
-  xlabel.style.top = `${margin.top + chartHeight + 30}px`;
-  xlabel.style.color = "#6B7C8D";
-  xlabel.style.fontSize = "14px";
-  document.querySelector("#renderer").appendChild(xlabel);
+// X轴标签
+let xlabel = document.createElement("div");
+xlabel.textContent = "Income (TagGNI)";
+xlabel.style.position = "absolute";
+xlabel.style.left = `${margin.left + chartWidth / 2 - 40}px`;
+xlabel.style.top = `${margin.top + chartHeight + 30}px`;
+xlabel.style.color = "#6B7C8D";
+xlabel.style.fontSize = "14px";
+xlabel.style.display = "none"; // 初始隐藏
+xlabel.id = "axis-x-label";
+document.querySelector("#renderer").appendChild(xlabel);
 
-  // Y-Achsen-Beschriftung
-  let ylabel = document.createElement("div");
-  ylabel.textContent = "Cost";
-  ylabel.style.position = "absolute";
-  ylabel.style.left = `${margin.left - 50}px`;
-  ylabel.style.top = `${margin.top + chartHeight / 2 - 30}px`;
-  ylabel.style.transform = "rotate(-90deg)";
-  ylabel.style.transformOrigin = "left top";
-  ylabel.style.color = "#6B7C8D";
-  ylabel.style.fontSize = "14px";
-  document.querySelector("#renderer").appendChild(ylabel);
+// Y轴标签
+let ylabel = document.createElement("div");
+ylabel.textContent = "Cost";
+ylabel.style.position = "absolute";
+ylabel.style.left = `${margin.left - 50}px`;
+ylabel.style.top = `${margin.top + chartHeight / 2 - 30}px`;
+ylabel.style.transform = "rotate(-90deg)";
+ylabel.style.transformOrigin = "left top";
+ylabel.style.color = "#6B7C8D";
+ylabel.style.fontSize = "14px";
+ylabel.style.display = "none"; // 初始隐藏
+ylabel.id = "axis-y-label";
+document.querySelector("#renderer").appendChild(ylabel);
+
 
   // tooltip
   let tooltip = document.createElement("div");
@@ -843,7 +855,7 @@ function barToScatterUltraSmoothTransition() {
 
   // 只在第一次 bar->scatter 时执行动画，后续切换仅变大小
   if (!barToScatterUltraSmoothTransition.hasEnteredScatter) {
-    // Zuerst Balken zeichnen
+    // 先画bar，后变成dot
     let barDots = [];
     let startStates = [];
     let endStates = [];
@@ -853,7 +865,7 @@ function barToScatterUltraSmoothTransition() {
       const xPos = margin.left + i * (barWidth + gap);
       const yPos = margin.top + (chartHeight - barHeight);
 
-      // 目标
+      // 目标位置和大小
       const logMinX = Math.log10(minX);
       const logMaxX = Math.log10(maxX);
       const logMinY = Math.log10(minY);
@@ -861,12 +873,10 @@ function barToScatterUltraSmoothTransition() {
 
       const x = gmynd.map(Math.log10(parseFloat(country["TagGNI"])), logMinX, logMaxX, 0, chartWidth);
       const y = gmynd.map(Math.log10(parseFloat(country["Cost"])), logMinY, logMaxY, chartHeight, 0);
-      // 新增：r 根据当前字段
       const r = gmynd.map(parseFloat(country[rField]), minR, maxR, 20, 160);
 
       let bar = document.createElement("div");
       bar.classList.add("bar", "bar-to-dot");
-      // 不再设置 backgroundColor、opacity、borderRadius，全部交由CSS
       bar.style.width = `${barWidth}px`;
       bar.style.height = `${barHeight}px`;
       bar.style.left = `${xPos}px`;
@@ -877,10 +887,10 @@ function barToScatterUltraSmoothTransition() {
       document.querySelector("#renderer").appendChild(bar);
       barDots.push(bar);
 
+      // 记录起始和目标状态
       bar.style.transition = "none";
-      void bar.offsetHeight;  // Force reflow
+      void bar.offsetHeight;  // 强制reflow
       bar.style.transition = "width 0.9s cubic-bezier(0.4, 0, 0.2, 1), height 0.9s cubic-bezier(0.4, 0, 0.2, 1), left 0.9s cubic-bezier(0.4, 0, 0.2, 1), top 0.9s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.9s cubic-bezier(0.4, 0, 0.2, 1)";
-      
       startStates.push({
         width: barWidth,
         height: barHeight,
@@ -897,10 +907,15 @@ function barToScatterUltraSmoothTransition() {
       });
     });
 
-    // 绑定交互，动画过程中也能响应
+    // 绑定交互
     data.forEach((country, i) => {
       let bar = barDots[i];
       bar.onmouseenter = () => {
+        document.getElementById("axis-x").style.display = "";
+        document.getElementById("axis-y").style.display = "";
+        document.getElementById("axis-x-label").style.display = "";
+        document.getElementById("axis-y-label").style.display = "";
+
         bar.classList.add("active");
         let rLabel = "";
         if (rField === "Vergleich") rLabel = `Ratio: ${country["Vergleich"]}%`;
@@ -916,23 +931,28 @@ function barToScatterUltraSmoothTransition() {
         tooltip.style.top = `${bar.getBoundingClientRect().top}px`;
       };
       bar.onmouseleave = () => {
+        document.getElementById("axis-x").style.display = "none";
+        document.getElementById("axis-y").style.display = "none";
+        document.getElementById("axis-x-label").style.display = "none";
+        document.getElementById("axis-y-label").style.display = "none";
+
         bar.classList.remove("active");
         tooltip.style.display = "none";
       };
     });
 
-      // Force reflow to ensure transitions work
-      void document.querySelector("#renderer").offsetHeight;
+    // 强制reflow，确保动画生效
+    void document.querySelector("#renderer").offsetHeight;
 
-      // Start the transition by setting the final state
-      barDots.forEach((bar, i) => {
-        const e = endStates[i];
-        bar.style.width = `${e.width}px`;
-        bar.style.height = `${e.height}px`;
-        bar.style.left = `${e.left}px`;
-        bar.style.top = `${e.top}px`;
-        bar.style.borderRadius = `${e.borderRadius}px`;
-      });
+    // 设置目标状态，触发动画
+    barDots.forEach((bar, i) => {
+      const e = endStates[i];
+      bar.style.width = `${e.width}px`;
+      bar.style.height = `${e.height}px`;
+      bar.style.left = `${e.left}px`;
+      bar.style.top = `${e.top}px`;
+      bar.style.borderRadius = `${e.borderRadius}px`;
+    });
 
     // 标记已进入scatter
     barToScatterUltraSmoothTransition.hasEnteredScatter = true;
@@ -941,7 +961,6 @@ function barToScatterUltraSmoothTransition() {
 
   // 已在scatter页面，切换字段时仅变大小
   const existingDots = document.querySelectorAll(".bar-to-dot");
-  const needRedraw = existingDots.length === 0;
 
   // 重新绘制所有散点，带动画，仅变大小
   let dots = [];
@@ -964,7 +983,6 @@ function barToScatterUltraSmoothTransition() {
 
     let dot = document.createElement("div");
     dot.classList.add("bar", "bar-to-dot");
-    // 不再设置 backgroundColor、opacity、borderRadius，全部交由CSS
     dot.style.position = "absolute";
     dot.style.left = `${margin.left + x - prevR / 2}px`;
     dot.style.top = `${margin.top + y - prevR / 2}px`;
@@ -1001,10 +1019,10 @@ function barToScatterUltraSmoothTransition() {
     };
   });
 
-  // Force reflow to ensure transitions work
+  // 强制reflow
   void document.querySelector("#renderer").offsetHeight;
 
-  // Update sizes immediately after creating dots
+  // 更新目标尺寸
   dots.forEach(({ dot, x, y, r }) => {
     dot.style.width = `${r}px`;
     dot.style.height = `${r}px`;
@@ -1012,7 +1030,7 @@ function barToScatterUltraSmoothTransition() {
     dot.style.top = `${margin.top + y - r / 2}px`;
   });
 
-  // 确保记录之前的字段，供下次切换用
+  // 记录字段
   if (barToScatterUltraSmoothTransition.prevRField !== rField) {
     barToScatterUltraSmoothTransition.prevRField = rField;
   }

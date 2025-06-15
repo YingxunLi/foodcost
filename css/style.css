@@ -77,7 +77,8 @@ body {
 }
 
 .top-btn.main,
-.top-btn.affordability{
+.top-btn.affordability,
+.top-btn.overview {
     font-size: 20px;
     padding: 4px 0px;
     margin-left: 0px;
@@ -90,34 +91,32 @@ body {
 .top-btn.main {
     margin-left: 0px;
     font-weight: bold;
+    background: transparent;
 }
-.top-btn.affordability {
-    margin-left: 60px;
-    font-weight: bold;
-}
+.top-btn.affordability,
 .top-btn.overview {
     margin-left: 60px;
     font-weight: bold;
+    background: transparent;
 }
 
 .top-btn.main.inactive,
-.top-btn.affordability.inactive {
-    background: #ffffff;
+.top-btn.affordability.inactive,
+.top-btn.overview.inactive {
+    background: transparent;
     color: #E1E5E8;
 }
 
 .top-btn.main:active,
-.top-btn.affordability:active {
-    background: #ffffff;
+.top-btn.affordability:active,
+.top-btn.overview:active,
+.top-btn.main:hover,
+.top-btn.affordability:hover,
+.top-btn.overview:hover {
+    background: transparent;
     color: #6B7C8D;
 }
 
-.top-btn.main:hover,
-.top-btn.affordability:hover {
-    background: #ffffff !important;
-    color: #6B7C8D;
-    font-weight: bold;
-}
 
 /* ----------- bar -----------  */
 .bar {
