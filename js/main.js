@@ -797,56 +797,79 @@ function barToScatterUltraSmoothTransition() {
   const minR = Math.min(...data.map(d => parseFloat(d[rField])));
   const maxR = Math.max(...data.map(d => parseFloat(d[rField])));
 
-  // 绘制X轴
-let axisX = document.createElement("div");
-axisX.style.position = "absolute";
-axisX.style.left = `${margin.left}px`;
-axisX.style.top = `${margin.top + chartHeight}px`;
-axisX.style.width = `${chartWidth}px`;
-axisX.style.height = "1px";
-axisX.style.background = "#bbb";
-axisX.style.display = "none"; // 初始隐藏
-axisX.id = "axis-x";
-document.querySelector("#renderer").appendChild(axisX);
+// X轴刻度点和数字
+const xTicks = 5;
+for (let i = 0; i <= xTicks; i++) {
+  const t = i / xTicks;
+  // 对数轴
+  const logMinX = Math.log10(minX);
+  const logMaxX = Math.log10(maxX);
+  const logVal = logMinX + t * (logMaxX - logMinX);
+  const val = Math.pow(10, logVal);
+  const x = gmynd.map(logVal, logMinX, logMaxX, 0, chartWidth);
 
-// 绘制Y轴
-let axisY = document.createElement("div");
-axisY.style.position = "absolute";
-axisY.style.left = `${margin.left}px`;
-axisY.style.top = `${margin.top}px`;
-axisY.style.width = "1px";
-axisY.style.height = `${chartHeight}px`;
-axisY.style.background = "#bbb";
-axisY.style.display = "none"; // 初始隐藏
-axisY.id = "axis-y";
-document.querySelector("#renderer").appendChild(axisY);
+  // 刻度点
+  let tick = document.createElement("div");
+  tick.style.position = "absolute";
+  tick.style.left = `${margin.left + x - 3}px`;
+  tick.style.top = `${margin.top + chartHeight - 3 + 2}px`;
+  tick.style.width = "6px";
+  tick.style.height = "6px";
+  tick.style.borderRadius = "50%";
+  tick.style.background = "#bbb";
+  tick.style.display = "none";
+  tick.className = "axis-x-tick";
+  document.querySelector("#renderer").appendChild(tick);
 
-// X轴标签
-let xlabel = document.createElement("div");
-xlabel.textContent = "Income (TagGNI)";
-xlabel.style.position = "absolute";
-xlabel.style.left = `${margin.left + chartWidth / 2 - 40}px`;
-xlabel.style.top = `${margin.top + chartHeight + 30}px`;
-xlabel.style.color = "#6B7C8D";
-xlabel.style.fontSize = "14px";
-xlabel.style.display = "none"; // 初始隐藏
-xlabel.id = "axis-x-label";
-document.querySelector("#renderer").appendChild(xlabel);
+  // 刻度数字
+  let label = document.createElement("div");
+  label.style.position = "absolute";
+  label.style.left = `${margin.left + x - 15}px`;
+  label.style.top = `${margin.top + chartHeight + 10}px`;
+  label.style.color = "#6B7C8D";
+  label.style.fontSize = "12px";
+  label.style.display = "none";
+  label.className = "axis-x-tick-label";
+  label.textContent = val >= 1000 ? Math.round(val) : val.toFixed(1);
+  document.querySelector("#renderer").appendChild(label);
+}
 
-// Y轴标签
-let ylabel = document.createElement("div");
-ylabel.textContent = "Cost";
-ylabel.style.position = "absolute";
-ylabel.style.left = `${margin.left - 50}px`;
-ylabel.style.top = `${margin.top + chartHeight / 2 - 30}px`;
-ylabel.style.transform = "rotate(-90deg)";
-ylabel.style.transformOrigin = "left top";
-ylabel.style.color = "#6B7C8D";
-ylabel.style.fontSize = "14px";
-ylabel.style.display = "none"; // 初始隐藏
-ylabel.id = "axis-y-label";
-document.querySelector("#renderer").appendChild(ylabel);
+// Y轴刻度点和数字
+const yTicks = 5;
+for (let i = 0; i <= yTicks; i++) {
+  const t = i / yTicks;
+  // 对数轴
+  const logMinY = Math.log10(minY);
+  const logMaxY = Math.log10(maxY);
+  const logVal = logMinY + t * (logMaxY - logMinY);
+  const val = Math.pow(10, logVal);
+  const y = gmynd.map(logVal, logMinY, logMaxY, chartHeight, 0);
 
+  // 刻度点
+  let tick = document.createElement("div");
+  tick.style.position = "absolute";
+  tick.style.left = `${margin.left - 6}px`;
+  tick.style.top = `${margin.top + y - 3}px`;
+  tick.style.width = "6px";
+  tick.style.height = "6px";
+  tick.style.borderRadius = "50%";
+  tick.style.background = "#bbb";
+  tick.style.display = "none";
+  tick.className = "axis-y-tick";
+  document.querySelector("#renderer").appendChild(tick);
+
+  // 刻度数字
+  let label = document.createElement("div");
+  label.style.position = "absolute";
+  label.style.left = `${margin.left - 45}px`;
+  label.style.top = `${margin.top + y - 8}px`;
+  label.style.color = "#6B7C8D";
+  label.style.fontSize = "12px";
+  label.style.display = "none";
+  label.className = "axis-y-tick-label";
+  label.textContent = val >= 1000 ? Math.round(val) : val.toFixed(1);
+  document.querySelector("#renderer").appendChild(label);
+}
 
   // tooltip
   let tooltip = document.createElement("div");
@@ -911,10 +934,10 @@ document.querySelector("#renderer").appendChild(ylabel);
     data.forEach((country, i) => {
       let bar = barDots[i];
       bar.onmouseenter = () => {
-        document.getElementById("axis-x").style.display = "";
-        document.getElementById("axis-y").style.display = "";
-        document.getElementById("axis-x-label").style.display = "";
-        document.getElementById("axis-y-label").style.display = "";
+  document.querySelectorAll(".axis-x-tick").forEach(e => e.style.display = "");
+  document.querySelectorAll(".axis-x-tick-label").forEach(e => e.style.display = "");
+  document.querySelectorAll(".axis-y-tick").forEach(e => e.style.display = "");
+  document.querySelectorAll(".axis-y-tick-label").forEach(e => e.style.display = "");
 
         bar.classList.add("active");
         let rLabel = "";
@@ -931,10 +954,10 @@ document.querySelector("#renderer").appendChild(ylabel);
         tooltip.style.top = `${bar.getBoundingClientRect().top}px`;
       };
       bar.onmouseleave = () => {
-        document.getElementById("axis-x").style.display = "none";
-        document.getElementById("axis-y").style.display = "none";
-        document.getElementById("axis-x-label").style.display = "none";
-        document.getElementById("axis-y-label").style.display = "none";
+  document.querySelectorAll(".axis-x-tick").forEach(e => e.style.display = "none");
+  document.querySelectorAll(".axis-x-tick-label").forEach(e => e.style.display = "none");
+  document.querySelectorAll(".axis-y-tick").forEach(e => e.style.display = "none");
+  document.querySelectorAll(".axis-y-tick-label").forEach(e => e.style.display = "none");
 
         bar.classList.remove("active");
         tooltip.style.display = "none";
