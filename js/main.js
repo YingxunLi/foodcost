@@ -715,7 +715,7 @@ function drawCountryCostChart(transitionMode) {
 function barToScatterUltraSmoothTransition() {
   // richtopOptions entfernen
   let topOptions = document.querySelector("#top-area > div:last-child");
-  if (topOptions) topOptions.style.display = "none";
+  // if (topOptions) topOptions.style.display = "none";
 
   // checkbox entfernen
   document.querySelector("#renderer").innerHTML = "";
@@ -1084,12 +1084,20 @@ function drawOverviewChart() {
   const minUnter = Math.min(...data.map(d => parseFloat(d["Unterernährung"])));
   const maxUnter = Math.max(...data.map(d => parseFloat(d["Unterernährung"])));
 
-    const minCostArea = Math.PI * 50 * 50;
-  const maxCostArea = Math.PI * 160 * 160;
-  const minIncomeArea = Math.PI * 80 * 80;
-  const maxIncomeArea = Math.PI * 200 * 200;
+  //   const minCostArea = Math.PI * 50 * 50;
+  // const maxCostArea = Math.PI * 160 * 160;
+  // const minIncomeArea = Math.PI * 80 * 80;
+  // const maxIncomeArea = Math.PI * 200 * 200;
+  // const minUnterArea = Math.PI * 10 * 10;
+  // const maxUnterArea = Math.PI * 30 * 30;
+
+  const minCostArea = Math.PI * 40 * 40;
+  const maxCostArea = Math.PI * 150 * 150;
+  const minIncomeArea = Math.PI * 70 * 70;
+  const maxIncomeArea = Math.PI * 190 * 190;
   const minUnterArea = Math.PI * 10 * 10;
-  const maxUnterArea = Math.PI * 30 * 30;
+  const maxUnterArea = Math.PI * 50 * 50;
+
 
   // Position
   const nodes = data.map((country, i) => {
@@ -1105,9 +1113,9 @@ function drawOverviewChart() {
 
     // garantieren, dass der Bodenkreis größer ist
     if (ratio > 50 && rCost <= rIncome) {
-      [rCost, rIncome] = [Math.max(rCost, rIncome + 8), Math.min(rCost - 8, rIncome)];
+      [rCost, rIncome] = [Math.max(rCost, rIncome + 10), Math.min(rCost - 10, rIncome)];
     } else if (ratio < 50 && rIncome <= rCost) {
-      [rIncome, rCost] = [Math.max(rIncome, rCost + 8), Math.min(rIncome - 8, rCost)];
+      [rIncome, rCost] = [Math.max(rIncome, rCost + 10), Math.min(rIncome - 10, rCost)];
 
     } // 8 kann verändert werden, um den Abstand zu erhöhen
 
@@ -1120,7 +1128,7 @@ function drawOverviewChart() {
     const logMinIncome = Math.log10(minIncome);
     const logMaxIncome = Math.log10(maxIncome);
     const xBase = gmynd.map(Math.log10(income), logMinIncome, logMaxIncome, margin.left, margin.left + chartWidth);
-    const x = xBase + (Math.random() - 0.5) * 40; 
+    const x = xBase + (Math.random() - 0.5) * 50; 
     const y = margin.top + Math.random() * chartHeight;
 
     return {
@@ -1171,7 +1179,7 @@ function drawOverviewChart() {
       }
     }
   }
-  simulate(nodes, 300);
+  simulate(nodes, 500);
 
   // tooltip
   let tooltip = document.createElement("div");
